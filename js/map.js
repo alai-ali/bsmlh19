@@ -26,11 +26,9 @@ function initMap() {
   }
 }
 }
-
 function createMap() {
-  T('Создаём карту...');
-  if (map) return;
-
+  if (mapInitialized) return;
+  mapInitialized = true;
   map = L.map('map-container').setView([43.238, 76.889], 12); // Алматы
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
