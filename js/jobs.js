@@ -102,10 +102,8 @@ function postNewJob() {
       clearPostForm();
     }).catch(function(e){ T('Ошибка: ' + e.message); });
   } else {
-    // Без Firebase — локальное демо
-    T('✅ Заказ опубликован (демо)!');
-    el('jobs-post-form').style.display = 'none';
-    el('jobs-employer-home').style.display = 'block';
+  T('⏳ Подключение... попробуйте ещё раз');
+    initJobsDB();
   }
 }
 
