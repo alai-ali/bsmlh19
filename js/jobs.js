@@ -136,20 +136,21 @@ function loadMyJobs() {
 
 // РАБОТНИК
 function loadJobs() {
-  if (!jobsDB) { setTimeout(loadJobs, 500); return; }
   var list = el('worker-jobs-list');
   if (!list) return;
-  jobsDB.orderByChild('status').equalTo('open').on('value', function(snap) {
+  firebase.database().ref('jobs').orderByChild('status').equalTo('open').on('value', function(snap) {
     var jobs = snap.val();
     if (!jobs) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px;">Нет доступных заказов</div>'; return; }
     list.innerHTML = Object.values(jobs).reverse().map(function(j) {
       var alreadyApplied = j.applicants && j.applicants[U.huid.replace(/[^a-zA-Z0-9]/g,'')];
+      var cat = jobCategories.find(function(c){return c.id===j.category;})||{icon:'🔧'};
       return '<div class="job-item" onclick="openJobDetail(\''+j.id+'\')" style="cursor:pointer;">'
-        + '<div class="job-company">' + (jobCategories.find(function(c){return c.id===j.category;})||{icon:'🔧',name:'Другое'}).icon + ' ' + j.employer + '</div>'
+        + '<div class="job-company">' + cat.icon + ' ' + j.employer + '</div>'
         + '<div class="job-title">' + j.title + '</div>'
         + '<div style="font-size:13px;color:var(--text2);margin-bottom:8px;line-height:1.5;">' + j.desc.substring(0,80) + (j.desc.length>80?'...':'') + '</div>'
         + '<div class="job-tags"><span class="job-tag">'+j.price+'</span><span class="job-tag">'+j.location+'</span></div>'
-        + (alreadyApplied ? '<div style="margin-top:10px;font-size:13px;color:var(--green);font-weight:600;">✅ Вы откликнулись</div>'
+        + (alreadyApplied
+          ? '<div style="margin-top:10px;display:flex;gap:8px;align-items:center;"><span style="font-size:13px;color:var(--green);font-weight:600;flex:1;">✅ Вы откликнулись</span><button style="padding:8px 14px;background:var(--green);color:white;border:none;border-radius:10px;font-size:13px;cursor:pointer;" onclick="event.stopPropagation();openJobChat(\''+j.id+'\',\''+j.employerHuid+'\',\''+j.employer+'\')">💬 Чат</button></div>'
           : '<button class="btn" style="margin-top:10px;padding:10px;font-size:13px;" onclick="event.stopPropagation();applyToJob(\''+j.id+'\',this)">Откликнуться</button>')
         + '</div>';
     }).join('');
