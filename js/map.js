@@ -6,7 +6,7 @@ var workersLayer = null;
 var currentFilter = '';
 
 function initMap() {
-  if (mapInitialized) return;
+  if (map) { map.invalidateSize(); return; }
   if (!document.getElementById('map-container')) return;
 
   if (!document.getElementById('leaflet-css')) {
