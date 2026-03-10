@@ -30,8 +30,8 @@ function initMap() {
 }
 
 function createMap() {
-  if (mapInitialized) return;
-  mapInitialized = true;
+  T('Создаём карту...');
+  if (map) return;
 
   map = L.map('map-container').setView([43.238, 76.889], 12); // Алматы
 
