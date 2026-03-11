@@ -234,19 +234,31 @@ var chatJobId = null;
 var chatWorkerHuid = null;
 
 function openJobChat(jobId, workerHuid, workerName) {
+  // Отключить старый listener
   if (chatRef) { chatRef.off(); chatRef = null; }
+  
   chatJobId = jobId;
   chatWorkerHuid = workerHuid;
+  
   var chatTitle = el('job-chat-title');
   if (chatTitle) chatTitle.innerText = workerName;
-  el('job-chat').style.display = 'flex';
+  
+  // Очистить сообщения
   el('job-chat-msgs').innerHTML = '';
+  el('job-chat').style.display = 'flex';
 
-  if (!jobsDB) return;
-  var chatKey = (jobId + '_' + workerHuid).replace(/[^a-zA-Z0-9]/g,'').substring(0,50);
-chatRef = firebase.database().ref('job_chats/' + chatKey);
+  // Ключ чата = jobId + HUID работника
+  var chatKey = (jobId + workerHuid).replace(/[^a-zA-Z0-9]/g,'').substring(0,60);
+  
+  if (!window.firebase || !firebase.apps.length) { 
+    T('Нет соединения'); 
+    return; 
+  }
+  
+  chatRef = firebase.database().ref('job_chats/' + chatKey);
   chatRef.on('child_added', function(snap) {
     var msg = snap.val();
+    if (!msg) return;
     var msgs = el('job-chat-msgs');
     var isMe = msg.senderHuid === U.huid;
     var d = document.createElement('div');
@@ -263,11 +275,16 @@ function sendJobChatMsg() {
   var text = inp.value.trim();
   inp.value = '';
   if (!chatRef) { T('Нет соединения'); return; }
-  chatRef.push({ text: text, senderName: U.name, senderHuid: U.huid, time: Date.now() });
+  chatRef.push({ 
+    text: text, 
+    senderName: U.name, 
+    senderHuid: U.huid, 
+    time: Date.now() 
+  });
 }
 
 function closeJobChat() {
-  if (chatRef) chatRef.off();
+  if (chatRef) { chatRef.off(); chatRef = null; }
   el('job-chat').style.display = 'none';
 }
 
