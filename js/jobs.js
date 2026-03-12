@@ -170,8 +170,7 @@ function applyToJob(jobId, btn) {
 // ДЕТАЛИ ЗАКАЗА
 function openJobDetail(jobId) {
   currentJobId = jobId;
-  jobsDB.child(jobId).once('value', function(snap) {
-    var j = snap.val();
+firebase.database().ref('jobs/' + jobId).once('value', function(snap) {    var j = snap.val();
     if (!j) return;
     var isEmployer = j.employerHuid === U.huid;
     var detail = el('job-detail');
