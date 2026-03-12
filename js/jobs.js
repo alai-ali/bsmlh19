@@ -138,8 +138,7 @@ function loadMyJobs() {
 function loadJobs() {
   var list = el('worker-jobs-list');
   if (!list) return;
-  firebase.database().ref('jobs').orderByChild('status').equalTo('open').on('value', function(snap) {
-    var jobs = snap.val();
+firebase.database().ref('jobs').on('value', function(snap) {    var jobs = snap.val();
     if (!jobs) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px;">Нет доступных заказов</div>'; return; }
     list.innerHTML = Object.values(jobs).reverse().map(function(j) {
       var alreadyApplied = j.applicants && j.applicants[U.huid.replace(/[^a-zA-Z0-9]/g,'')];
