@@ -257,13 +257,14 @@ function openJobDetail(jobId) {
       + '<div style="font-size:24px;font-weight:900;color:var(--green);margin-bottom:16px;">' + j.price + '</div>'
       + '<div class="card"><div class="section-title">Описание</div><div style="font-size:14px;color:var(--text);line-height:1.7;">' + j.desc + '</div></div>'
       + '<div class="card"><div class="section-title">Работодатель</div><div style="font-size:14px;font-weight:600;">' + j.employer + '</div></div>'
-      + (isEmployer ? renderApplicants(j) :
-alreadyApplied ? (j.status==='closed' && j.selectedWorker===U.huid
-  ? (!j.confirmedWorker
-    ? '<button class="btn" style="background:#059669;" onclick="completeJobWorker(\''+j.id+'\',\''+j.employerHuid+'\')">✅ Подтвердить завершение</button>'
-    : '<div style="text-align:center;padding:20px;font-size:14px;color:#059669;font-weight:600;">⏳ Ждём работодателя...</div>')
-  : '<div style="text-align:center;padding:20px;font-size:15px;font-weight:700;color:var(--green);">✅ Вы уже откликнулись</div>')          : j.status === 'closed' ? '<div style="text-align:center;padding:20px;font-size:14px;color:var(--text2);">🔒 Заказ закрыт</div>'
-          : '<button class="btn" onclick="applyToJob(\''+j.id+'\',this)">Откликнуться</button>')
+     + (isEmployer ? renderApplicants(j) :
+          j.status === 'done' ? '<div style="text-align:center;padding:20px;font-size:14px;color:#059669;font-weight:600;">✅ Заказ завершён</div>' :
+          alreadyApplied && j.selectedWorker === U.huid && j.status === 'closed' ? (!j.confirmedWorker
+            ? '<button class="btn" style="background:#059669;" onclick="completeJobWorker(\''+j.id+'\',\''+j.employerHuid+'\')">✅ Подтвердить завершение</button>'
+            : '<div style="text-align:center;padding:20px;font-size:14px;color:#059669;font-weight:600;">⏳ Ждём работодателя...</div>') :
+          alreadyApplied ? '<div style="text-align:center;padding:20px;font-size:15px;font-weight:700;color:var(--green);">✅ Вы уже откликнулись</div>' :
+          j.status === 'closed' ? '<div style="text-align:center;padding:20px;font-size:14px;color:var(--text2);">🔒 Заказ закрыт</div>' :
+          '<button class="btn" onclick="applyToJob(\''+j.id+'\',this)">Откликнуться</button>')
       + '</div>';
     el('job-detail').style.display = 'flex';
   });
