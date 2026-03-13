@@ -14,7 +14,7 @@
 </head>
 <body>
 
-<!-- ── SPLASH ── -->
+<!-- -- SPLASH -- -->
 <div id="splash">
   <div class="sp-logo">
     <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
@@ -24,7 +24,7 @@
   <div class="sp-bar"><div class="sp-fill" id="sp-fill"></div></div>
 </div>
 
-<!-- Inline скрипт — скрыть splash ДО загрузки внешних файлов -->
+<!-- Inline    splash     -->
 <script>
 (function(){
   var done = false;
@@ -32,7 +32,7 @@
     if (done) return; done = true;
     var s = document.getElementById('splash');
     if (s) s.style.display = 'none';
-    // Загрузить Firebase после splash
+    // ��������� Firebase ����� splash
     if (typeof loadFirebase === 'function') loadFirebase();
   }
   setTimeout(hide, 1500);
@@ -40,9 +40,9 @@
 })();
 </script>
 
-<!-- ── ОНБОРДИНГ ── -->
+<!-- --  -- -->
 
-<!-- Шаг 1: Имя -->
+<!--  1:  -->
 <div id="s1" class="scr on">
   <div class="steps-row">
     <div class="step-dot on"></div>
@@ -52,84 +52,84 @@
   <div class="scr-logo">
     <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
   </div>
-  <div class="scr-step">Шаг 1 из 3</div>
-  <div class="scr-h">Добро пожаловать в BSMLH</div>
-  <div class="scr-p">Создайте цифровую личность, защищённую биометрией и NFC-чипом</div>
-  <input class="inp" id="inp-name" placeholder="Ваше имя" autocomplete="off" autocorrect="off" spellcheck="false">
-  <button class="btn" onclick="step1Next()">Продолжить</button>
+  <div class="scr-step">��� 1 �� 3</div>
+  <div class="scr-h">����� ���������� � BSMLH</div>
+  <div class="scr-p">�������� �������� ��������, ���������� ���������� � NFC-�����</div>
+  <input class="inp" id="inp-name" placeholder=" " maxlength="40" autocomplete="off" autocorrect="off" spellcheck="false">
+  <button class="btn" onclick="step1Next()">����������</button>
 </div>
 
-<!-- Шаг 2: Фото -->
+<!--  2:  -->
 <div id="s2" class="scr">
   <div class="steps-row">
     <div class="step-dot on"></div>
     <div class="step-dot on"></div>
     <div class="step-dot"></div>
   </div>
-  <div class="scr-step">Шаг 2 из 3</div>
-  <div class="scr-h">Фото профиля</div>
-  <div class="scr-p">Загрузите фото или пропустите этот шаг</div>
+  <div class="scr-step">��� 2 �� 3</div>
+  <div class="scr-h">���� �������</div>
+  <div class="scr-p">��������� ���� ��� ���������� ���� ���</div>
   <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:24px;">
     <div id="photo-prev" style="width:100px;height:100px;border-radius:50%;background:var(--green-light);border:3px solid var(--green);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:16px;">
       <svg width="40" height="40" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" fill="#21A038"/></svg>
     </div>
     <input type="file" id="photo-inp" accept="image/*" style="display:none" onchange="loadPhoto(this)">
-    <button class="btn-ghost" style="width:auto;padding:10px 24px;" onclick="document.getElementById('photo-inp').click()">📷 Выбрать фото</button>
+    <button class="btn-ghost" style="width:auto;padding:10px 24px;" onclick="document.getElementById('photo-inp').click()">?? ������� ����</button>
   </div>
-  <button class="btn" onclick="showScr('s3')">Продолжить</button>
-  <button class="btn-ghost" onclick="showScr('s3')">Пропустить</button>
+  <button class="btn" onclick="showScr('s3')">����������</button>
+  <button class="btn-ghost" onclick="showScr('s3')">����������</button>
 </div>
 
-<!-- Шаг 3: NFC -->
+<!--  3: NFC -->
 <div id="s3" class="scr">
   <div class="steps-row">
     <div class="step-dot on"></div>
     <div class="step-dot on"></div>
     <div class="step-dot on"></div>
   </div>
-  <div class="scr-step">Шаг 3 из 3 — NFC Чип</div>
-  <div class="scr-h">Активация BSMLH Chip</div>
-  <div class="scr-p">Поднесите NFC-чип к задней части телефона для активации</div>
+  <div class="scr-step">��� 3 �� 3 � NFC ���</div>
+  <div class="scr-h">��������� BSMLH Chip</div>
+  <div class="scr-p">��������� NFC-��� � ������ ����� �������� ��� ���������</div>
   <div class="nfc-card">
     <div class="nfc-icon">
       <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 14H9V8h6v2h-4v1h4v2h-4v1h4v2z"/></svg>
     </div>
-    <div class="nfc-label">BSMLH CHIP · NTAG213</div>
-    <div class="nfc-status" id="nst1">Готов к сканированию</div>
+    <div class="nfc-label">BSMLH CHIP � NTAG213</div>
+    <div class="nfc-status" id="nst1">����� � ������������</div>
     <div id="beam1" style="display:none;width:100%;height:2px;background:var(--green);border-radius:99px;animation:pulse 1s infinite;"></div>
   </div>
-  <button class="btn" id="nbtn1" onclick="nfcActivate(1)">🛡️ Активировать чип</button>
-  <button class="btn-ghost" onclick="showSMS()">Войти без чипа →</button>
+  <button class="btn" id="nbtn1" onclick="nfcActivate(1)">??? ������������ ���</button>
+  <button class="btn-ghost" onclick="showSMS()">����� ��� ���� ></button>
 </div>
 
-<!-- Шаг 4: SMS -->
+<!--  4: SMS -->
 <div id="s4" class="scr">
   <div id="ss1">
-    <div class="scr-step">Верификация</div>
-    <div class="scr-h">Введите номер телефона</div>
-    <div class="scr-p">Мы отправим код подтверждения на ваш номер</div>
+    <div class="scr-step">�����������</div>
+    <div class="scr-h">������� ����� ��������</div>
+    <div class="scr-p">�� �������� ��� ������������� �� ��� �����</div>
     <div class="phone-prefix">
-      <span class="prefix-flag">🇰🇿</span>
+      <span class="prefix-flag">????</span>
       <span class="prefix-code">+7</span>
       <div class="prefix-sep"></div>
       <input class="prefix-inp" id="sms-phone" placeholder="XXX XXX XX XX" type="tel" inputmode="numeric">
     </div>
-    <button class="btn" id="nbtn-sms" onclick="sendSMS()">Получить код</button>
+    <button class="btn" id="nbtn-sms" onclick="sendSMS()">�������� ���</button>
   </div>
   <div id="ss2" style="display:none;">
-    <div class="scr-step">Верификация</div>
-    <div class="scr-h">Введите код</div>
-    <div class="scr-p" id="sms-hint">Код отправлен на ваш номер</div>
+    <div class="scr-step">�����������</div>
+    <div class="scr-h">������� ���</div>
+    <div class="scr-p" id="sms-hint">��� ��������� �� ��� �����</div>
     <input class="inp" id="sms-code" placeholder="_ _ _ _ _ _" type="tel" inputmode="numeric" maxlength="6" style="font-size:24px;letter-spacing:8px;text-align:center;">
-    <button class="btn" onclick="verifySMS()">Подтвердить</button>
-    <button class="btn-ghost" onclick="el('ss1').style.display='block';el('ss2').style.display='none';">← Изменить номер</button>
+    <button class="btn" onclick="verifySMS()">�����������</button>
+    <button class="btn-ghost" onclick="el('ss1').style.display='block';el('ss2').style.display='none';">< �������� �����</button>
   </div>
 </div>
 
-<!-- ── APP ── -->
+<!-- -- APP -- -->
 <div id="app">
 
-  <!-- Хедер -->
+  <!--  -->
   <div class="app-head">
     <div class="head-logo">
       <div class="head-logo-icon">
@@ -139,105 +139,105 @@
     </div>
     <div class="head-avatar" onclick="openPg('pg-set')">
       <img id="dash-av" src="" style="display:none">
-      <span class="head-avatar-ph" id="dash-av-ph">А</span>
+      <span class="head-avatar-ph" id="dash-av-ph">�</span>
     </div>
   </div>
 
-  <!-- Контент -->
+  <!--  -->
   <div class="app-body">
 
-    <!-- Главная -->
+    <!--  -->
     <div id="tab-home" class="tab-content on">
       <div class="id-card">
-        <div class="id-card-name" id="id-name">ИМЯ</div>
+        <div class="id-card-name" id="id-name">���</div>
         <div class="id-card-huid" id="id-huid">BSMLH-2026-XXXXXXXXXXXXXXXX</div>
         <div class="id-card-bottom">
           <div>
-            <div class="id-card-label">Статус</div>
-            <div style="font-size:13px;color:rgba(255,255,255,0.9);font-weight:600;" id="id-chip-status">Без чипа</div>
+            <div class="id-card-label">������</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.9);font-weight:600;" id="id-chip-status">��� ����</div>
           </div>
           <div class="id-card-chip"></div>
         </div>
       </div>
-      <div class="section-title">Сервисы</div>
+      <div class="section-title">�������</div>
       <div class="svc-grid">
         <div class="svc-item" onclick="openPg('pg-pat')">
           <div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg></div>
-          <span class="svc-name">Патент</span>
+          <span class="svc-name">������</span>
         </div>
         <div class="svc-item" onclick="openPg('pg-jobs')">
           <div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.36C18 2.98 16.52 2 15 2c-1.3 0-2.4.78-2.97 1.84L12 5h-.03L11 3.84C10.4 2.78 9.3 2 8 2 6.48 2 5 2.98 5 4.64c0 .48.1.92.18 1.36H3c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg></div>
-          <span class="svc-name">Работа</span>
+          <span class="svc-name">������</span>
         </div>
         <div class="svc-item" onclick="openPg('pg-wal')">
           <div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg></div>
-          <span class="svc-name">Кошелёк</span>
+          <span class="svc-name">������</span>
         </div>
         <div class="svc-item" onclick="openPg('pg-fund')">
           <div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M3.5 18.5l6-6 4 4L22 6.92 20.59 5.5l-7.09 8-4-4L2 17l1.5 1.5z"/></svg></div>
-          <span class="svc-name">Инвестиции</span>
+          <span class="svc-name">����������</span>
         </div>
         <div class="svc-item" onclick="openPg('pg-chip')">
           <div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M7 2v2H5C3.9 4 3 4.9 3 6v2H1v2h2v4H1v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h4v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-4h2V8h-2V6c0-1.1-.9-2-2-2h-2V2h-2v2H9V2H7zm2 4h6c.55 0 1 .45 1 1v8c0 .55-.45 1-1 1H9c-.55 0-1-.45-1-1V7c0-.55.45-1 1-1zm1 2v6h4V8h-4z"/></svg></div>
-          <span class="svc-name">NFC Чип</span>
+          <span class="svc-name">NFC ���</span>
         </div>
         <div class="svc-item" onclick="switchTab('chat')">
           <div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></div>
-          <span class="svc-name">ALAI ИИ</span>
+          <span class="svc-name">ALAI ��</span>
         </div>
       </div>
-      <div class="section-title">Новости</div>
+      <div class="section-title">�������</div>
       <div id="feed-home"></div>
     </div>
 
-    <!-- Карта -->
+    <!--  -->
     <div id="tab-map" class="tab-content">
-      <!-- Фильтры категорий -->
+      <!--   -->
       <div id="map-filters" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;"></div>
-      <!-- Карта -->
-<iframe id="map-container" src="https://maps.google.com/maps?q=Almaty&output=embed&z=12" style="width:100%;height:50vh;min-height:300px;border-radius:16px;border:none;margin-bottom:12px;"></iframe>      <!-- Кнопки -->
+      <!--  -->
+<iframe id="map-container" src="https://maps.google.com/maps?q=Almaty&output=embed&z=12" style="width:100%;height:50vh;min-height:300px;border-radius:16px;border:none;margin-bottom:12px;"></iframe>      <!--  -->
       <div style="display:flex;gap:8px;">
-        <button class="btn" style="flex:1;padding:12px;" onclick="shareMyLocation()">📍 Я ищу работу</button>
-        <button class="btn-ghost" style="flex:1;padding:12px;" onclick="showCategorySelect()">🎯 Моя специальность</button>
+        <button class="btn" style="flex:1;padding:12px;" onclick="shareMyLocation()">?? � ��� ������</button>
+        <button class="btn-ghost" style="flex:1;padding:12px;" onclick="showCategorySelect()">?? ��� �������������</button>
       </div>
-      <!-- Выбор специальности -->
+      <!--   -->
       <div id="my-cat-panel" style="display:none;margin-top:12px;" class="card">
-        <div class="section-title">Выберите специальность</div>
+        <div class="section-title">�������� �������������</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;" id="my-cat-list"></div>
       </div>
-      <!-- Карточка работника -->
+      <!--   -->
       <div id="worker-card" style="display:none;position:fixed;bottom:80px;left:16px;right:16px;background:white;border-radius:20px;padding:16px;box-shadow:0 8px 32px rgba(0,0,0,0.15);z-index:1500;"></div>
     </div>
 
-    <!-- Чат -->
+    <!--  -->
     <div id="tab-chat" class="tab-content">
       <div class="chat-msgs" id="chat-msgs"></div>
       <div class="chat-input-row">
-        <input class="chat-inp" id="chat-inp" placeholder="Спросите ALAI..." onkeydown="if(event.key==='Enter')sendChat()">
+        <input class="chat-inp" id="chat-inp" placeholder=" ALAI..." onkeydown="if(event.key==='Enter')sendChat()">
         <button class="chat-send" onclick="sendChat()">
           <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
       </div>
     </div>
 
-    <!-- Профиль -->
+    <!--  -->
     <div id="tab-prof" class="tab-content">
       <div class="prof-hero">
-        <div class="prof-av"><img id="p-av" src="" style="display:none"><span class="prof-av-ph" id="p-av-ph">А</span></div>
-        <div class="prof-name" id="p-name">ИМЯ</div>
+        <div class="prof-av"><img id="p-av" src="" style="display:none"><span class="prof-av-ph" id="p-av-ph">�</span></div>
+        <div class="prof-name" id="p-name">���</div>
         <div class="prof-huid" id="p-huid">BSMLH-2026-...</div>
       </div>
       <div class="card">
         <div class="set-row" onclick="openPg('pg-set')">
-          <div class="set-row-left"><div class="set-row-icon"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></div><span class="set-row-text">Настройки</span></div>
+          <div class="set-row-left"><div class="set-row-icon"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></div><span class="set-row-text">���������</span></div>
           <div class="set-row-arr"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
         </div>
         <div class="set-row" onclick="openPg('pg-chip')">
-          <div class="set-row-left"><div class="set-row-icon"><svg viewBox="0 0 24 24"><path d="M7 2v2H5C3.9 4 3 4.9 3 6v2H1v2h2v4H1v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h4v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-4h2V8h-2V6c0-1.1-.9-2-2-2h-2V2h-2v2H9V2H7z"/></svg></div><span class="set-row-text">NFC Чип</span></div>
+          <div class="set-row-left"><div class="set-row-icon"><svg viewBox="0 0 24 24"><path d="M7 2v2H5C3.9 4 3 4.9 3 6v2H1v2h2v4H1v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h4v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-4h2V8h-2V6c0-1.1-.9-2-2-2h-2V2h-2v2H9V2H7z"/></svg></div><span class="set-row-text">NFC ���</span></div>
           <div class="set-row-arr"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
         </div>
-        <div class="set-row" onclick="el('app').style.display='none';showScr('s1');T('Выход выполнен')">
-          <div class="set-row-left"><div class="set-row-icon"><svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg></div><span class="set-row-text">Выйти</span></div>
+        <div class="set-row" onclick="el('app').style.display='none';showScr('s1');T(' ')">
+          <div class="set-row-left"><div class="set-row-icon"><svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg></div><span class="set-row-text">�����</span></div>
           <div class="set-row-arr"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
         </div>
       </div>
@@ -245,15 +245,15 @@
 
   </div>
 
-  <!-- Навбар -->
+  <!--  -->
   <nav class="navbar">
     <button class="nav-btn on" id="nav-home" onclick="switchTab('home')">
       <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-      <span>Главная</span>
+      <span>�������</span>
     </button>
     <button class="nav-btn" id="nav-map" onclick="switchTab('map')">
       <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
-      <span>Карта</span>
+      <span>�����</span>
     </button>
     <button class="nav-btn" id="nav-chat" onclick="switchTab('chat')">
       <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
@@ -261,311 +261,243 @@
     </button>
     <button class="nav-btn" id="nav-prof" onclick="switchTab('prof')">
       <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-      <span>Профиль</span>
+      <span>�������</span>
     </button>
   </nav>
 </div>
 
-<!-- ── СТРАНИЦЫ ── -->
+<!-- --  -- -->
 
-<!-- Патент -->
+<!--  -->
 <div id="pg-pat" class="pg">
   <div class="pg-head">
     <button class="pg-back" onclick="closePg('pg-pat')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-    <span class="pg-head-title">🛠️ Патентная мастерская</span>
+    <span class="pg-head-title">??? ��������� ����������</span>
   </div>
   <div class="pg-body">
     <div id="pat-view" style="display:none;margin-bottom:16px;"></div>
     <div id="pat-empty" style="text-align:center;padding:16px 0 20px;">
       <svg width="56" height="56" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z" fill="#21A038" opacity="0.3"/></svg>
-      <div style="font-size:14px;color:var(--text2);margin-top:8px;">Нет зарегистрированных изобретений</div>
+      <div style="font-size:14px;color:var(--text2);margin-top:8px;">��� ������������������ �����������</div>
     </div>
     <div class="card">
-      <div class="section-title">+ Новое изобретение</div>
+      <div class="section-title">+ ����� �����������</div>
       <select class="inp" id="inv-niche" style="-webkit-appearance:none;">
-        <option value="">Выберите нишу...</option>
-        <option value="IT">💻 Информационные технологии</option>
-        <option value="MED">🏥 Медицина и здоровье</option>
-        <option value="AGR">🌾 Сельское хозяйство</option>
-        <option value="ENE">⚡ Энергетика</option>
-        <option value="TRN">🚗 Транспорт</option>
-        <option value="ECO">🌍 Экология</option>
-        <option value="EDU">📚 Образование</option>
-        <option value="FIN">💰 Финансы и блокчейн</option>
-        <option value="SEC">🛡️ Безопасность</option>
-        <option value="OTH">🔧 Другое</option>
+        <option value="">�������� ����...</option>
+        <option value="IT">?? �������������� ����������</option>
+        <option value="MED">?? �������� � ��������</option>
+        <option value="AGR">?? �������� ���������</option>
+        <option value="ENE">? ����������</option>
+        <option value="TRN">?? ���������</option>
+        <option value="ECO">?? ��������</option>
+        <option value="EDU">?? �����������</option>
+        <option value="FIN">?? ������� � ��������</option>
+        <option value="SEC">??? ������������</option>
+        <option value="OTH">?? ������</option>
       </select>
-      <input class="inp" id="inv-t" placeholder="Название изобретения">
-      <textarea class="inp" id="inv-d" placeholder="Описание — что делает, как работает, в чём уникальность..." rows="4" style="resize:none;"></textarea>
-      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Уровень защиты</div>
+      <input class="inp" id="inv-t" placeholder=" ">
+      <textarea class="inp" id="inv-d" placeholder="   ,  ,   ..." rows="4" style="resize:none;"></textarea>
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">������� ������</div>
       <div style="display:flex;gap:8px;margin-bottom:16px;">
         <div id="lv1" class="lv-btn on" onclick="slv(1)"><div class="lv-num">L1</div><div class="lv-name">Timestamp</div><div class="lv-price">$0.99</div></div>
         <div id="lv2" class="lv-btn" onclick="slv(2)"><div class="lv-num">L2</div><div class="lv-name">Prior Art</div><div class="lv-price">$9.99</div></div>
         <div id="lv3" class="lv-btn" onclick="slv(3)"><div class="lv-num">L3</div><div class="lv-name">Certificate</div><div class="lv-price">$49.99</div></div>
       </div>
-      <button class="btn" onclick="tryFixInv()">🛡️ Приложить чип и зафиксировать</button>
+      <button class="btn" onclick="tryFixInv()">??? ��������� ��� � �������������</button>
     </div>
   </div>
 </div>
 
-<!-- Работа -->
+<!--  -->
 <div id="pg-jobs" class="pg">
   <div class="pg-head">
     <button class="pg-back" onclick="closePg('pg-jobs')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-    <span class="pg-head-title">🤝 Биржа труда</span>
+    <span class="pg-head-title">?? ����� �����</span>
   </div>
   <div class="pg-body">
 
-    <!-- Выбор роли -->
+    <!--   -->
     <div id="jobs-role">
       <div style="text-align:center;padding:16px 0 24px;">
-        <div style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px;">Кто вы?</div>
-        <div style="font-size:14px;color:var(--text2);">Выберите роль для продолжения</div>
+        <div style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px;">��� ��?</div>
+        <div style="font-size:14px;color:var(--text2);">�������� ���� ��� �����������</div>
       </div>
       <div onclick="selectRole('employer')" style="background:var(--green);border-radius:20px;padding:24px;margin-bottom:12px;cursor:pointer;display:flex;align-items:center;gap:16px;">
-        <div style="font-size:40px;">👔</div>
-        <div><div style="font-size:18px;font-weight:900;color:white;">Работодатель</div><div style="font-size:13px;color:rgba(255,255,255,0.8);">Разместить заказ, выбрать исполнителя</div></div>
+        <div style="font-size:40px;">??</div>
+        <div><div style="font-size:18px;font-weight:900;color:white;">������������</div><div style="font-size:13px;color:rgba(255,255,255,0.8);">���������� �����, ������� �����������</div></div>
       </div>
       <div onclick="selectRole('worker')" style="background:white;border-radius:20px;padding:24px;cursor:pointer;display:flex;align-items:center;gap:16px;border:2px solid var(--border);">
-        <div style="font-size:40px;">🧑‍💼</div>
-        <div><div style="font-size:18px;font-weight:900;color:var(--text);">Работник</div><div style="font-size:13px;color:var(--text2);">Найти заказ и откликнуться</div></div>
+        <div style="font-size:40px;">?????</div>
+        <div><div style="font-size:18px;font-weight:900;color:var(--text);">��������</div><div style="font-size:13px;color:var(--text2);">����� ����� � ������������</div></div>
       </div>
     </div>
 
-    <!-- Работодатель -->
+    <!--  -->
     <div id="jobs-employer" style="display:none;">
-<div id="jobs-employer-home">
-  <button class="btn-ghost" style="margin-bottom:12px;" onclick="el('jobs-employer').style.display='none';el('jobs-role').style.display='block';">← Сменить роль</button>
-  <button class="btn" onclick="showPostJob()">+ Разместить заказ</button>
-        <div class="section-title">Мои заказы</div>
-        <div id="my-jobs-list"><div style="text-align:center;padding:20px;color:var(--text2);font-size:13px;">Нет активных заказов</div></div>
+      <div id="jobs-employer-home">
+        <button class="btn" onclick="showPostJob()">+ ���������� �����</button>
+        <div class="section-title">��� ������</div>
+        <div id="my-jobs-list"><div style="text-align:center;padding:20px;color:var(--text2);font-size:13px;">��� �������� �������</div></div>
+        <button class="btn-ghost" onclick="el('jobs-employer').style.display='none';el('jobs-role').style.display='block';">< ������� ����</button>
       </div>
-      <!-- Выбор категории -->
+      <!--   -->
       <div id="jobs-cat-select" style="display:none;">
-        <div style="font-size:17px;font-weight:700;margin-bottom:16px;">Выберите категорию</div>
+        <div style="font-size:17px;font-weight:700;margin-bottom:16px;">�������� ���������</div>
         <div id="jobs-cat-list"></div>
-        <button class="btn-ghost" onclick="el('jobs-cat-select').style.display='none';el('jobs-employer-home').style.display='block';">← Назад</button>
+        <button class="btn-ghost" onclick="el('jobs-cat-select').style.display='none';el('jobs-employer-home').style.display='block';">< �����</button>
       </div>
-      <!-- Форма заказа -->
+      <!--   -->
       <div id="jobs-post-form" style="display:none;">
-        <div style="font-size:17px;font-weight:700;margin-bottom:4px;">Новый заказ</div>
+        <div style="font-size:17px;font-weight:700;margin-bottom:4px;">����� �����</div>
         <div id="jobs-post-cat-label" style="font-size:13px;color:var(--green);font-weight:600;margin-bottom:16px;"></div>
-        <input class="inp" id="jp-title" placeholder="Название заказа">
-        <textarea class="inp" id="jp-desc" placeholder="Подробное описание задания..." rows="4" style="resize:none;"></textarea>
-        <input class="inp" id="jp-price" placeholder="Оплата (напр. 15 000₸)">
-        <input class="inp" id="jp-location" placeholder="Местоположение (или Удалённо)">
-        <button class="btn" onclick="postNewJob()">📢 Опубликовать заказ</button>
-        <button class="btn-ghost" onclick="el('jobs-post-form').style.display='none';el('jobs-employer-home').style.display='block';">← Назад</button>
+        <input class="inp" id="jp-title" placeholder=" " maxlength="60">
+        <textarea class="inp" id="jp-desc" placeholder="  ..." rows="4" maxlength="500" style="resize:none;"></textarea>
+        <input class="inp" id="jp-price" placeholder=" (. 15 000?)" maxlength="20">
+        <input class="inp" id="jp-location" placeholder=" ( )" maxlength="50">
+        <button class="btn" onclick="postNewJob()">?? ������������ �����</button>
+        <button class="btn-ghost" onclick="el('jobs-post-form').style.display='none';el('jobs-employer-home').style.display='block';">< �����</button>
       </div>
     </div>
 
-    <!-- Работник -->
-   <div id="jobs-worker" style="display:none;">
-  <button class="btn-ghost" style="margin-bottom:12px;" onclick="el('jobs-worker').style.display='none';el('jobs-role').style.display='block';">← Сменить роль</button>
-  <div style="overflow-x:auto;white-space:nowrap;margin-bottom:16px;padding-bottom:4px;">
-        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="loadJobs()">Все</button>
-        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="filterJobs('it')">💻 IT</button>
-        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="filterJobs('transport')">🚗 Транспорт</button>
-        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="filterJobs('build')">🏗️ Стройка</button>
-        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="filterJobs('clean')">🧹 Уборка</button>
-        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="filterJobs('other')">🔧 Другое</button>
+    <!--  -->
+    <div id="jobs-worker" style="display:none;">
+      <div style="overflow-x:auto;white-space:nowrap;margin-bottom:16px;padding-bottom:4px;">
+        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="loadJobs()">���</button>
+        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="filterJobs('it')">?? IT</button>
+        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="filterJobs('transport')">?? ���������</button>
+        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="filterJobs('build')">??? �������</button>
+        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="filterJobs('clean')">?? ������</button>
+        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="filterJobs('other')">?? ������</button>
       </div>
-      <div id="worker-jobs-list"><div style="text-align:center;padding:20px;color:var(--text2);">Загрузка...</div></div>
+      <div id="worker-jobs-list"><div style="text-align:center;padding:20px;color:var(--text2);">��������...</div></div>
+      <button class="btn-ghost" style="margin-top:8px;" onclick="el('jobs-worker').style.display='none';el('jobs-role').style.display='block';">< ������� ����</button>
     </div>
 
   </div>
 </div>
 
-<!-- Детали заказа -->
+<!--   -->
 <div id="job-detail" style="display:none;position:fixed;inset:0;z-index:3000;background:var(--bg);flex-direction:column;overflow-y:auto;"></div>
 
-<!-- Чат по заказу -->
+<!--    -->
 <div id="job-chat" style="display:none;position:fixed;inset:0;z-index:4000;background:var(--bg);flex-direction:column;">
   <div class="pg-head">
     <button class="pg-back" onclick="closeJobChat()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-    <span class="pg-head-title" id="job-chat-title">Чат</span>
+    <span class="pg-head-title" id="job-chat-title">���</span>
   </div>
   <div id="job-chat-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
   <div class="chat-input-row">
-    <input class="chat-inp" id="job-chat-inp" placeholder="Сообщение..." onkeydown="if(event.key==='Enter')sendJobChatMsg()">
+    <input class="chat-inp" id="job-chat-inp" placeholder="..." maxlength="500" onkeydown="if(event.key==='Enter')sendJobChatMsg()">
     <button class="chat-send" onclick="sendJobChatMsg()"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
   </div>
 </div>
 
-<!-- Рейтинг -->
+<!--  -->
 <div id="rating-panel" style="display:none;position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,0.7);align-items:flex-end;">
   <div style="background:white;border-radius:24px 24px 0 0;padding:24px;width:100%;">
-    <div style="font-size:18px;font-weight:700;margin-bottom:16px;" id="rating-title">Оценить</div>
+    <div style="font-size:18px;font-weight:700;margin-bottom:16px;" id="rating-title">�������</div>
     <input type="hidden" id="rating-job-id">
     <input type="hidden" id="rating-target">
-<input type="hidden" id="rating-target-role">    <div id="rating-stars" style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;"></div>
-    <textarea class="inp" id="rating-review" placeholder="Отзыв (необязательно)" rows="3" style="resize:none;"></textarea>
-    <button class="btn" onclick="submitRating()">⭐ Отправить оценку</button>
-    <button class="btn-ghost" onclick="closeRating()">Отмена</button>
+    <div id="rating-stars" style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;"></div>
+    <textarea class="inp" id="rating-review" placeholder=" ()" rows="3" maxlength="300" style="resize:none;"></textarea>
+    <button class="btn" onclick="submitRating()">? ��������� ������</button>
+    <button class="btn-ghost" onclick="closeRating()">������</button>
   </div>
 </div>
 
-<!-- Кошелёк -->
+<!--  -->
 <div id="pg-wal" class="pg">
   <div class="pg-head">
     <button class="pg-back" onclick="closePg('pg-wal')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-    <span class="pg-head-title">Кошелёк</span>
+    <span class="pg-head-title">������</span>
   </div>
   <div class="pg-body">
     <div class="wallet-card">
-      <div class="wallet-balance-label">Баланс BSMLH Token</div>
+      <div class="wallet-balance-label">������ BSMLH Token</div>
       <div><span class="wallet-balance">0.00</span><span class="wallet-currency"> BST</span></div>
-      <div style="font-size:11px;opacity:0.6;margin-top:4px;">Токен запускается в 2026</div>
+      <div style="font-size:11px;opacity:0.6;margin-top:4px;">����� ����������� � 2026</div>
       <div class="wallet-actions">
-        <button class="wallet-btn" onclick="T('Скоро будет доступно')">↑ Пополнить</button>
-        <button class="wallet-btn" onclick="T('Скоро будет доступно')">↓ Вывести</button>
-        <button class="wallet-btn" onclick="T('Скоро будет доступно')">⇄ Обмен</button>
+        <button class="wallet-btn" onclick="T('  ')">^ ���������</button>
+        <button class="wallet-btn" onclick="T('  ')">v �������</button>
+        <button class="wallet-btn" onclick="T('  ')">? �����</button>
       </div>
     </div>
     <div class="card">
-      <div class="section-title">Мой адрес</div>
-      <div id="wal-addr" style="font-size:12px;color:var(--text2);word-break:break-all;padding:8px 0;">Генерируется после входа...</div>
-      <button class="btn-ghost" style="margin-top:8px;" onclick="copyAddr()">📋 Скопировать адрес</button>
+      <div class="section-title">��� �����</div>
+      <div id="wal-addr" style="font-size:12px;color:var(--text2);word-break:break-all;padding:8px 0;">������������ ����� �����...</div>
+      <button class="btn-ghost" style="margin-top:8px;" onclick="copyAddr()">?? ����������� �����</button>
     </div>
     <div class="card" style="background:var(--green-light);border:1.5px solid var(--green);">
-      <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:4px;">🚀 BST Token</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.6;">BSMLH Security Token запускается в 2026. Все зарегистрированные пользователи получат начальный баланс автоматически.</div>
+      <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:4px;">?? BST Token</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6;">BSMLH Security Token ����������� � 2026. ��� ������������������ ������������ ������� ��������� ������ �������������.</div>
     </div>
   </div>
 </div>
 
-<!-- Инвестиции -->
+<!--  -->
 <div id="pg-fund" class="pg">
   <div class="pg-head">
     <button class="pg-back" onclick="closePg('pg-fund')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-    <span class="pg-head-title">Инвестиции</span>
+    <span class="pg-head-title">����������</span>
   </div>
   <div class="pg-body">
     <div class="card" style="background:linear-gradient(135deg,var(--green),var(--green-dark));color:white;margin-bottom:16px;">
-      <div style="font-size:12px;opacity:0.8;margin-bottom:4px;">Портфель</div>
+      <div style="font-size:12px;opacity:0.8;margin-bottom:4px;">��������</div>
       <div style="font-size:28px;font-weight:900;">$0.00</div>
-      <div style="font-size:12px;opacity:0.7;margin-top:4px;">BSMLH Token — в разработке</div>
+      <div style="font-size:12px;opacity:0.7;margin-top:4px;">BSMLH Token � � ����������</div>
     </div>
-    <div class="section-title">Активы</div>
+    <div class="section-title">������</div>
     <div class="card">
-      <div class="invest-row"><div class="invest-left"><div class="invest-icon">₿</div><div><div class="invest-name">Bitcoin</div><div class="invest-sub">BTC</div></div></div><div class="invest-val"><div class="invest-price">$67,420</div><div class="invest-change">+2.4%</div></div></div>
-      <div class="invest-row"><div class="invest-left"><div class="invest-icon">Ξ</div><div><div class="invest-name">Ethereum</div><div class="invest-sub">ETH</div></div></div><div class="invest-val"><div class="invest-price">$3,240</div><div class="invest-change">+1.8%</div></div></div>
-      <div class="invest-row"><div class="invest-left"><div class="invest-icon">🟢</div><div><div class="invest-name">BSMLH Token</div><div class="invest-sub">BST</div></div></div><div class="invest-val"><div class="invest-price">—</div><div class="invest-change" style="color:var(--text2);">Скоро</div></div></div>
+      <div class="invest-row"><div class="invest-left"><div class="invest-icon">?</div><div><div class="invest-name">Bitcoin</div><div class="invest-sub">BTC</div></div></div><div class="invest-val"><div class="invest-price">$67,420</div><div class="invest-change">+2.4%</div></div></div>
+      <div class="invest-row"><div class="invest-left"><div class="invest-icon">?</div><div><div class="invest-name">Ethereum</div><div class="invest-sub">ETH</div></div></div><div class="invest-val"><div class="invest-price">$3,240</div><div class="invest-change">+1.8%</div></div></div>
+      <div class="invest-row"><div class="invest-left"><div class="invest-icon">??</div><div><div class="invest-name">BSMLH Token</div><div class="invest-sub">BST</div></div></div><div class="invest-val"><div class="invest-price">�</div><div class="invest-change" style="color:var(--text2);">�����</div></div></div>
     </div>
   </div>
 </div>
 
-<!-- NFC Чип -->
+<!-- NFC  -->
 <div id="pg-chip" class="pg">
   <div class="pg-head">
     <button class="pg-back" onclick="closePg('pg-chip')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-    <span class="pg-head-title">NFC Чип</span>
+    <span class="pg-head-title">NFC ���</span>
   </div>
   <div class="pg-body">
     <div class="nfc-card">
       <div class="nfc-icon"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 14H9V8h6v2h-4v1h4v2h-4v1h4v2z"/></svg></div>
-      <div class="nfc-label" id="chip-status-label">ЧИП НЕ АКТИВИРОВАН</div>
-      <div class="nfc-status" id="nst2">Поднесите чип к задней части телефона</div>
+      <div class="nfc-label" id="chip-status-label">��� �� �����������</div>
+      <div class="nfc-status" id="nst2">��������� ��� � ������ ����� ��������</div>
       <div id="beam2" style="display:none;width:100%;height:3px;background:var(--green);border-radius:99px;animation:pulse 1s infinite;margin-top:8px;"></div>
     </div>
     <div id="chip-uid-block" style="display:none;" class="card">
-      <div class="card-title">UID Чипа</div>
+      <div class="card-title">UID ����</div>
       <div id="chip-uid-val" style="font-size:15px;word-break:break-all;font-family:monospace;font-weight:600;color:var(--green);margin-top:4px;"></div>
-      <button class="btn-ghost" style="margin-top:10px;" onclick="copyUID()">📋 Скопировать UID</button>
+      <button class="btn-ghost" style="margin-top:10px;" onclick="copyUID()">?? ����������� UID</button>
     </div>
     <div class="card">
-      <div class="section-title">О чипе BSMLH</div>
-      <div style="font-size:14px;color:var(--text2);line-height:1.7;">BSMLH Chip — физический NFC-чип стандарта <b>NTAG213</b>. После активации привязывается к вашему HUID и используется как физический ключ для входа и подписания документов.</div>
+      <div class="section-title">� ���� BSMLH</div>
+      <div style="font-size:14px;color:var(--text2);line-height:1.7;">BSMLH Chip � ���������� NFC-��� ��������� <b>NTAG213</b>. ����� ��������� ������������� � ������ HUID � ������������ ��� ���������� ���� ��� ����� � ���������� ����������.</div>
     </div>
-    <button class="btn" id="nbtn2" onclick="nfcActivate(2)">🛡️ Сканировать чип</button>
+    <button class="btn" id="nbtn2" onclick="nfcActivate(2)">??? ����������� ���</button>
   </div>
 </div>
 
-<!-- Настройки -->
+<!--  -->
 <div id="pg-set" class="pg">
   <div class="pg-head">
     <button class="pg-back" onclick="closePg('pg-set')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-    <span class="pg-head-title">Настройки</span>
+    <span class="pg-head-title">���������</span>
   </div>
   <div class="pg-body">
     <div class="prof-hero">
-      <div class="prof-av"><img id="set-av" src="" style="display:none"><span id="set-av-ph" class="prof-av-ph">А</span></div>
-      <div class="prof-name" id="set-name">ИМЯ</div>
+      <div class="prof-av"><img id="set-av" src="" style="display:none"><span id="set-av-ph" class="prof-av-ph">�</span></div>
+      <div class="prof-name" id="set-name">���</div>
       <div class="prof-huid" id="set-huid">BSMLH-2026-...</div>
     </div>
     <div class="card">
       <div class="set-row">
-        <div class="set-row-left"><div class="set-row-icon"><svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></div><span class="set-row-text" id="set-phone">Телефон не указан</span></div>
+        <div class="set-row-left"><div class="set-row-icon"><svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></div><span class="set-row-text" id="set-phone">������� �� ������</span></div>
         <div class="set-row-arr"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
       </div>
       <div class="set-row">
-        <div class="set-row-left"><div class="set-row-icon"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></div><span class="set-row-text" id="set-chip-txt">Чип не активирован</span></div>
-        <div class="set-row-arr"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
-      </div>
-    </div>
-    <button class="btn" style="background:#EF4444;margin-top:16px;" onclick="el('app').style.display='none';showScr('s1');T('Выход выполнен')">Выйти из аккаунта</button>
-  </div>
-</div>
-
-<!-- ── OVERLAY ЧИПА ── -->
-<div id="chip-overlay">
-  <div class="chip-overlay-icon">
-    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 14H9V8h6v2h-4v1h4v2h-4v1h4v2z"/></svg>
-  </div>
-  <div class="chip-overlay-title" id="chip-overlay-title">Поднесите чип к телефону...</div>
-  <div class="chip-overlay-sub" id="chip-overlay-sub">Задняя часть телефона · NTAG213</div>
-  <div class="chip-overlay-bar"></div>
-</div>
-
-<!-- ── СЕРТИФИКАТ ── -->
-<div id="cert-page">
-  <div class="cert-wrap">
-    <div class="cert-header">
-      <div class="cert-logo-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
-      </div>
-      <div class="cert-title">BSMLH</div>
-      <div class="cert-subtitle">Сертификат авторского приоритета</div>
-    </div>
-    <div class="cert-field"><label>Автор</label><p id="cert-author">—</p></div>
-    <div class="cert-field"><label>HUID</label><p class="mono" id="cert-huid">—</p></div>
-    <div class="cert-field"><label>Изобретение</label><p id="cert-title-txt">—</p></div>
-    <div class="cert-field"><label>Описание</label><p id="cert-desc">—</p></div>
-    <div style="display:flex;gap:12px;">
-      <div class="cert-field" style="flex:1;"><label>Ниша</label><p id="cert-niche">—</p></div>
-      <div class="cert-field" style="flex:1;"><label>Уровень</label><p id="cert-level" style="color:var(--green);font-weight:700;">—</p></div>
-    </div>
-    <div class="cert-field"><label>ID документа</label><p class="mono" id="cert-inv-id">—</p></div>
-    <div class="cert-field"><label>Дата фиксации</label><p id="cert-time">—</p></div>
-    <div class="cert-field"><label>SHA хэш</label><p class="mono" id="cert-hash">—</p></div>
-    <div class="cert-qr">
-      <img id="cert-qr-img" src="" alt="QR">
-      <div class="cert-qr-label">Скан для верификации</div>
-    </div>
-    <div class="cert-footer">
-      Настоящий сертификат подтверждает факт фиксации авторского приоритета в системе BSMLH с применением биометрической идентификации NFC-чипа.
-      <div class="cert-verified">✓ BSMLH VERIFIED</div>
-    </div>
-    <button class="btn" onclick="window.print()" style="margin-bottom:10px;">🖨️ Сохранить как PDF</button>
-    <button class="btn-ghost" onclick="closeCert()">← Назад</button>
-  </div>
-</div>
-
-<!-- ── ТОСТ ── -->
-<div class="toast" id="toast"></div>
-
-<!-- ── СКРИПТЫ (в конце — не блокируют загрузку) ── -->
-<script src="js/app.js"></script>
-<script src="js/jobs.js"></script>
-<script src="js/map.js"></script>
-<script src="js/nfc.js"></script>
-<script src="js/patent.js"></script>
-<script src="js/firebase.js"></script>
-
-<script>
-// Загрузить Firebase через 2 сек после загрузки страницы
-setTimeout(function(){ loadFirebase(); setTimeout(initJobsDB, 3000); }, 2000);
-</script>
-
-</body>
-</html>
+        <div class="set-row-left"><div class="set-row-icon"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></div><span class="set-row-text" id="set-chip-txt">��� �� �����������</span></div>
+        <div class="set-row-arr"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 1
