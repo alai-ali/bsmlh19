@@ -1,571 +1,337 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#21A038">
-<link rel="manifest" href="manifest.json">
-<title>BSMLH</title>
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-</head>
-<body>
+// БИРЖА ТРУДА
+var jobsDB = null;
+var currentJobId = null;
+var currentRole = null;
 
-<!-- ── SPLASH ── -->
-<div id="splash">
-  <div class="sp-logo">
-    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
-  </div>
-  <div class="sp-title">BSMLH</div>
-  <div class="sp-sub">Biometric Security Ledger</div>
-  <div class="sp-bar"><div class="sp-fill" id="sp-fill"></div></div>
-</div>
-
-<!-- Inline скрипт — скрыть splash ДО загрузки внешних файлов -->
-<script>
-(function(){
-  var done = false;
-  function hide() {
-    if (done) return; done = true;
-    var s = document.getElementById('splash');
-    if (s) s.style.display = 'none';
-    // Загрузить Firebase после splash
-    if (typeof loadFirebase === 'function') loadFirebase();
+function initJobsDB() {
+  if (!window.firebase || !firebase.apps || !firebase.apps.length) {
+    setTimeout(initJobsDB, 800); return;
   }
-  setTimeout(hide, 1500);
-  document.addEventListener('DOMContentLoaded', function(){ setTimeout(hide, 300); });
-})();
-</script>
+  try {
+    jobsDB = firebase.database().ref('jobs');
+    console.log('JobsDB ready');
+  } catch(e) {
+    setTimeout(initJobsDB, 800); return;
+  }
+}
 
-<!-- ── ОНБОРДИНГ ── -->
+// РОЛЬ
+function selectRole(role) {
+  currentRole = role;
+  el('jobs-role').style.display = 'none';
+  if (role === 'employer') {
+    el('jobs-employer').style.display = 'block';
+    loadMyJobs();
+  } else {
+    el('jobs-worker').style.display = 'block';
+    loadJobs();
+  }
+}
 
-<!-- Шаг 1: Имя -->
-<div id="s1" class="scr on">
-  <div class="steps-row">
-    <div class="step-dot on"></div>
-    <div class="step-dot"></div>
-    <div class="step-dot"></div>
-  </div>
-  <div class="scr-logo">
-    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
-  </div>
-  <div class="scr-step">Шаг 1 из 3</div>
-  <div class="scr-h">Добро пожаловать в BSMLH</div>
-  <div class="scr-p">Создайте цифровую личность, защищённую биометрией и NFC-чипом</div>
-  <input class="inp" id="inp-name" placeholder="Ваше имя" autocomplete="off" autocorrect="off" spellcheck="false">
-  <button class="btn" onclick="step1Next()">Продолжить</button>
-</div>
+// КАТЕГОРИИ
+var jobCategories = [
+  { id:'it', icon:'💻', name:'IT и технологии' },
+  { id:'build', icon:'🏗️', name:'Строительство' },
+  { id:'transport', icon:'🚗', name:'Транспорт и доставка' },
+  { id:'clean', icon:'🧹', name:'Уборка и клининг' },
+  { id:'cook', icon:'🍳', name:'Кулинария' },
+  { id:'teach', icon:'📚', name:'Образование' },
+  { id:'med', icon:'🏥', name:'Медицина' },
+  { id:'design', icon:'🎨', name:'Дизайн и творчество' },
+  { id:'fin', icon:'💰', name:'Финансы и бухгалтерия' },
+  { id:'other', icon:'🔧', name:'Другое' },
+];
 
-<!-- Шаг 2: Фото -->
-<div id="s2" class="scr">
-  <div class="steps-row">
-    <div class="step-dot on"></div>
-    <div class="step-dot on"></div>
-    <div class="step-dot"></div>
-  </div>
-  <div class="scr-step">Шаг 2 из 3</div>
-  <div class="scr-h">Фото профиля</div>
-  <div class="scr-p">Загрузите фото или пропустите этот шаг</div>
-  <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:24px;">
-    <div id="photo-prev" style="width:100px;height:100px;border-radius:50%;background:var(--green-light);border:3px solid var(--green);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:16px;">
-      <svg width="40" height="40" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" fill="#21A038"/></svg>
-    </div>
-    <input type="file" id="photo-inp" accept="image/*" style="display:none" onchange="loadPhoto(this)">
-    <button class="btn-ghost" style="width:auto;padding:10px 24px;" onclick="document.getElementById('photo-inp').click()">📷 Выбрать фото</button>
-  </div>
-  <button class="btn" onclick="showScr('s3')">Продолжить</button>
-  <button class="btn-ghost" onclick="showScr('s3')">Пропустить</button>
-</div>
+function renderCategories(targetId, onSelect) {
+  var container = el(targetId);
+  if (!container) return;
+  container.innerHTML = jobCategories.map(function(c) {
+    return '<div onclick="(' + onSelect + ')(\''+c.id+'\')" style="display:flex;align-items:center;gap:12px;padding:14px;background:white;border-radius:12px;margin-bottom:8px;cursor:pointer;border:1.5px solid var(--border);">'
+      + '<span style="font-size:24px;">'+c.icon+'</span>'
+      + '<span style="font-size:15px;font-weight:600;color:var(--text);">'+c.name+'</span>'
+      + '</div>';
+  }).join('');
+}
 
-<!-- Шаг 3: NFC -->
-<div id="s3" class="scr">
-  <div class="steps-row">
-    <div class="step-dot on"></div>
-    <div class="step-dot on"></div>
-    <div class="step-dot on"></div>
-  </div>
-  <div class="scr-step">Шаг 3 из 3 — NFC Чип</div>
-  <div class="scr-h">Активация BSMLH Chip</div>
-  <div class="scr-p">Поднесите NFC-чип к задней части телефона для активации</div>
-  <div class="nfc-card">
-    <div class="nfc-icon">
-      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 14H9V8h6v2h-4v1h4v2h-4v1h4v2z"/></svg>
-    </div>
-    <div class="nfc-label">BSMLH CHIP · NTAG213</div>
-    <div class="nfc-status" id="nst1">Готов к сканированию</div>
-    <div id="beam1" style="display:none;width:100%;height:2px;background:var(--green);border-radius:99px;animation:pulse 1s infinite;"></div>
-  </div>
-  <button class="btn" id="nbtn1" onclick="nfcActivate(1)">🛡️ Активировать чип</button>
-  <button class="btn-ghost" onclick="showSMS()">Войти без чипа →</button>
-</div>
+// РАБОТОДАТЕЛЬ
+var selectedCategory = '';
 
-<!-- Шаг 4: SMS -->
-<div id="s4" class="scr">
-  <div id="ss1">
-    <div class="scr-step">Верификация</div>
-    <div class="scr-h">Введите номер телефона</div>
-    <div class="scr-p">Мы отправим код подтверждения на ваш номер</div>
-    <div class="phone-prefix">
-      <span class="prefix-flag">🇰🇿</span>
-      <span class="prefix-code">+7</span>
-      <div class="prefix-sep"></div>
-      <input class="prefix-inp" id="sms-phone" placeholder="XXX XXX XX XX" type="tel" inputmode="numeric">
-    </div>
-    <button class="btn" id="nbtn-sms" onclick="sendSMS()">Получить код</button>
-  </div>
-  <div id="ss2" style="display:none;">
-    <div class="scr-step">Верификация</div>
-    <div class="scr-h">Введите код</div>
-    <div class="scr-p" id="sms-hint">Код отправлен на ваш номер</div>
-    <input class="inp" id="sms-code" placeholder="_ _ _ _ _ _" type="tel" inputmode="numeric" maxlength="6" style="font-size:24px;letter-spacing:8px;text-align:center;">
-    <button class="btn" onclick="verifySMS()">Подтвердить</button>
-    <button class="btn-ghost" onclick="el('ss1').style.display='block';el('ss2').style.display='none';">← Изменить номер</button>
-  </div>
-</div>
+function showPostJob() {
+  el('jobs-cat-select').style.display = 'block';
+  el('jobs-employer-home').style.display = 'none';
+  renderCategories('jobs-cat-list', 'selectJobCategory');
+}
 
-<!-- ── APP ── -->
-<div id="app">
+function selectJobCategory(catId) {
+  selectedCategory = catId;
+  var cat = jobCategories.find(function(c){ return c.id === catId; });
+  el('jobs-cat-select').style.display = 'none';
+  el('jobs-post-form').style.display = 'block';
+  el('jobs-post-cat-label').innerText = cat ? cat.icon + ' ' + cat.name : catId;
+}
 
-  <!-- Хедер -->
-  <div class="app-head">
-    <div class="head-logo">
-      <div class="head-logo-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
-      </div>
-      <span class="head-title">BSMLH</span>
-    </div>
-    <div class="head-avatar" onclick="openPg('pg-set')">
-      <img id="dash-av" src="" style="display:none">
-      <span class="head-avatar-ph" id="dash-av-ph">А</span>
-    </div>
-  </div>
+function postNewJob() {
+  var title = el('jp-title').value.trim();
+  var desc = el('jp-desc').value.trim();
+  var price = el('jp-price').value.trim();
+  var location = el('jp-location').value.trim();
+  if (!title) { T('Введите название заказа'); return; }
+  if (!desc) { T('Опишите задание'); return; }
+  if (!price) { T('Укажите оплату'); return; }
+  var job = {
+    id: Date.now().toString(36).toUpperCase(),
+    title: title, desc: desc, price: price,
+    location: location || 'Удалённо',
+    category: selectedCategory,
+    employer: U.name, employerHuid: U.huid,
+    status: 'open', createdAt: Date.now(), applicants: {}
+  };
+  firebase.database().ref('jobs/' + job.id).set(job).then(function() {
+    T('✅ Заказ опубликован!');
+    el('jobs-post-form').style.display = 'none';
+    el('jobs-employer-home').style.display = 'block';
+    loadMyJobs();
+    clearPostForm();
+  }).catch(function(e){ T('Ошибка: ' + e.message); });
+}
 
-  <!-- Контент -->
-  <div class="app-body">
+function clearPostForm() {
+  ['jp-title','jp-desc','jp-price','jp-location'].forEach(function(id){ var e=el(id); if(e) e.value=''; });
+}
 
-    <!-- Главная -->
-    <div id="tab-home" class="tab-content on">
-      <div class="id-card">
-        <div class="id-card-name" id="id-name">ИМЯ</div>
-        <div class="id-card-huid" id="id-huid">BSMLH-2026-XXXXXXXXXXXXXXXX</div>
-        <div class="id-card-bottom">
-          <div>
-            <div class="id-card-label">Статус</div>
-            <div style="font-size:13px;color:rgba(255,255,255,0.9);font-weight:600;" id="id-chip-status">Без чипа</div>
-          </div>
-          <div class="id-card-chip"></div>
-        </div>
-      </div>
-      <div class="section-title">Сервисы</div>
-      <div class="svc-grid">
-        <div class="svc-item" onclick="openPg('pg-pat')">
-          <div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg></div>
-          <span class="svc-name">Патент</span>
-        </div>
-        <div class="svc-item" onclick="openPg('pg-jobs')">
-          <div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.36C18 2.98 16.52 2 15 2c-1.3 0-2.4.78-2.97 1.84L12 5h-.03L11 3.84C10.4 2.78 9.3 2 8 2 6.48 2 5 2.98 5 4.64c0 .48.1.92.18 1.36H3c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/></svg></div>
-          <span class="svc-name">Работа</span>
-        </div>
-        <div class="svc-item" onclick="openPg('pg-wal')">
-          <div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg></div>
-          <span class="svc-name">Кошелёк</span>
-        </div>
-        <div class="svc-item" onclick="openPg('pg-fund')">
-          <div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M3.5 18.5l6-6 4 4L22 6.92 20.59 5.5l-7.09 8-4-4L2 17l1.5 1.5z"/></svg></div>
-          <span class="svc-name">Инвестиции</span>
-        </div>
-        <div class="svc-item" onclick="openPg('pg-chip')">
-          <div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M7 2v2H5C3.9 4 3 4.9 3 6v2H1v2h2v4H1v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h4v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-4h2V8h-2V6c0-1.1-.9-2-2-2h-2V2h-2v2H9V2H7zm2 4h6c.55 0 1 .45 1 1v8c0 .55-.45 1-1 1H9c-.55 0-1-.45-1-1V7c0-.55.45-1 1-1zm1 2v6h4V8h-4z"/></svg></div>
-          <span class="svc-name">NFC Чип</span>
-        </div>
-        <div class="svc-item" onclick="switchTab('chat')">
-          <div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg></div>
-          <span class="svc-name">ALAI ИИ</span>
-        </div>
-      </div>
-      <div class="section-title">Новости</div>
-      <div id="feed-home"></div>
-    </div>
+function loadMyJobs() {
+  var list = el('my-jobs-list');
+  if (!list) return;
+  firebase.database().ref('jobs').orderByChild('employerHuid').equalTo(U.huid).on('value', function(snap) {
+    var jobs = snap.val();
+    if (!jobs) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px;">Нет активных заказов</div>'; return; }
+    list.innerHTML = Object.values(jobs).reverse().map(function(j) {
+      var appCount = j.applicants ? Object.keys(j.applicants).length : 0;
+      return '<div class="job-item" onclick="openJobDetail(\''+j.id+'\')" style="cursor:pointer;">'
+        + '<div class="job-company">' + (jobCategories.find(function(c){return c.id===j.category;})||{icon:'🔧'}).icon + ' ' + j.location + '</div>'
+        + '<div class="job-title">' + j.title + '</div>'
+        + '<div class="job-tags"><span class="job-tag">'+j.price+'</span><span class="job-tag" style="background:'+(j.status==='open'?'var(--green-light)':'#FEE2E2')+';color:'+(j.status==='open'?'var(--green)':'#EF4444')+'">'+(j.status==='open'?'Открыт':'Закрыт')+'</span></div>'
+        + '<div style="font-size:12px;color:var(--green);margin-top:6px;font-weight:600;">👥 Откликов: '+appCount+'</div>'
+        + '</div>';
+    }).join('');
+  });
+}
 
-    <!-- Карта -->
-    <div id="tab-map" class="tab-content">
-      <!-- Фильтры категорий -->
-      <div id="map-filters" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:12px;"></div>
-      <!-- Карта -->
-<iframe id="map-container" src="https://maps.google.com/maps?q=Almaty&output=embed&z=12" style="width:100%;height:50vh;min-height:300px;border-radius:16px;border:none;margin-bottom:12px;"></iframe>      <!-- Кнопки -->
-      <div style="display:flex;gap:8px;">
-        <button class="btn" style="flex:1;padding:12px;" onclick="shareMyLocation()">📍 Я ищу работу</button>
-        <button class="btn-ghost" style="flex:1;padding:12px;" onclick="showCategorySelect()">🎯 Моя специальность</button>
-      </div>
-      <!-- Выбор специальности -->
-      <div id="my-cat-panel" style="display:none;margin-top:12px;" class="card">
-        <div class="section-title">Выберите специальность</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;" id="my-cat-list"></div>
-      </div>
-      <!-- Карточка работника -->
-      <div id="worker-card" style="display:none;position:fixed;bottom:80px;left:16px;right:16px;background:white;border-radius:20px;padding:16px;box-shadow:0 8px 32px rgba(0,0,0,0.15);z-index:1500;"></div>
-    </div>
+// РАБОТНИК
+function loadJobs() {
+  var list = el('worker-jobs-list');
+  if (!list) return;
+  firebase.database().ref('jobs').on('value', function(snap) {
+    var jobs = snap.val();
+    if (!jobs) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px;">Нет доступных заказов</div>'; return; }
+    var myKey = U.huid.replace(/[^a-zA-Z0-9]/g,'');
+    var jobList = Object.values(jobs).filter(function(j) {
+      var iApplied = j.applicants && j.applicants[myKey];
+      return j.status === 'open' || iApplied || j.selectedWorker === U.huid;
+    });
+    list.innerHTML = jobList.reverse().map(function(j) {
+      var alreadyApplied = j.applicants && j.applicants[myKey];
+      var isSelected = j.selectedWorker === U.huid;
+      var cat = jobCategories.find(function(c){return c.id===j.category;})||{icon:'🔧'};
+      var btn = '';
+      if (j.status === 'closed') {
+        if (isSelected) {
+          btn = '<div style="margin-top:10px;display:flex;gap:8px;align-items:center;">'
+            + '<span style="font-size:13px;color:var(--green);font-weight:600;flex:1;">🎉 Вы выбраны!</span>'
+            + '<button style="padding:8px 14px;background:var(--green);color:white;border:none;border-radius:10px;font-size:13px;cursor:pointer;" onclick="event.stopPropagation();openJobChat(\''+j.id+'\',\''+U.huid+'\',\''+j.employer+'\')">💬 Чат</button>'
+            + '</div>';
+        } else if (alreadyApplied) {
+          btn = '<div style="margin-top:10px;font-size:13px;color:#EF4444;text-align:center;padding:8px;background:#FEE2E2;border-radius:8px;">😔 Выбран другой исполнитель</div>';
+        } else {
+          btn = '<div style="margin-top:10px;font-size:13px;color:var(--text2);text-align:center;padding:8px;background:var(--bg);border-radius:8px;">🔒 Заказ закрыт</div>';
+        }
+      } else {
+        if (alreadyApplied) {
+          btn = '<div style="margin-top:10px;display:flex;gap:8px;align-items:center;">'
+            + '<span style="font-size:13px;color:var(--green);font-weight:600;flex:1;">✅ Вы откликнулись</span>'
+            + '<button style="padding:8px 14px;background:var(--green);color:white;border:none;border-radius:10px;font-size:13px;cursor:pointer;" onclick="event.stopPropagation();openJobChat(\''+j.id+'\',\''+U.huid+'\',\''+j.employer+'\')">💬 Чат</button>'
+            + '</div>';
+        } else {
+          btn = '<button class="btn" style="margin-top:10px;padding:10px;font-size:13px;" onclick="event.stopPropagation();applyToJob(\''+j.id+'\',this)">Откликнуться</button>';
+        }
+      }
+      return '<div class="job-item">'
+        + '<div class="job-company">' + cat.icon + ' ' + j.employer + '</div>'
+        + '<div class="job-title" onclick="openJobDetail(\''+j.id+'\')" style="cursor:pointer;">' + j.title + '</div>'
+        + '<div style="font-size:13px;color:var(--text2);margin-bottom:8px;line-height:1.5;">' + j.desc.substring(0,80) + (j.desc.length>80?'...':'') + '</div>'
+        + '<div class="job-tags"><span class="job-tag">'+j.price+'</span><span class="job-tag">'+j.location+'</span></div>'
+        + btn
+        + '</div>';
+    }).join('');
+  });
+}
 
-    <!-- Чат -->
-    <div id="tab-chat" class="tab-content">
-      <div class="chat-msgs" id="chat-msgs"></div>
-      <div class="chat-input-row">
-        <input class="chat-inp" id="chat-inp" placeholder="Спросите ALAI..." onkeydown="if(event.key==='Enter')sendChat()">
-        <button class="chat-send" onclick="sendChat()">
-          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-        </button>
-      </div>
-    </div>
+function applyToJob(jobId, btn) {
+  if (btn) btn.disabled = true;
+  var key = U.huid.replace(/[^a-zA-Z0-9]/g,'');
+  firebase.database().ref('jobs/' + jobId + '/applicants/' + key).set({
+    name: U.name, huid: U.huid, appliedAt: Date.now(), status: 'pending'
+  }).then(function() {
+    T('✅ Отклик отправлен!');
+    loadJobs();
+  }).catch(function(e){ T('Ошибка: ' + e.message); });
+}
 
-    <!-- Профиль -->
-    <div id="tab-prof" class="tab-content">
-      <div class="prof-hero">
-        <div class="prof-av"><img id="p-av" src="" style="display:none"><span class="prof-av-ph" id="p-av-ph">А</span></div>
-        <div class="prof-name" id="p-name">ИМЯ</div>
-        <div class="prof-huid" id="p-huid">BSMLH-2026-...</div>
-      </div>
-      <div class="card">
-        <div class="set-row" onclick="openPg('pg-set')">
-          <div class="set-row-left"><div class="set-row-icon"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></div><span class="set-row-text">Настройки</span></div>
-          <div class="set-row-arr"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
-        </div>
-        <div class="set-row" onclick="openPg('pg-chip')">
-          <div class="set-row-left"><div class="set-row-icon"><svg viewBox="0 0 24 24"><path d="M7 2v2H5C3.9 4 3 4.9 3 6v2H1v2h2v4H1v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h4v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-4h2V8h-2V6c0-1.1-.9-2-2-2h-2V2h-2v2H9V2H7z"/></svg></div><span class="set-row-text">NFC Чип</span></div>
-          <div class="set-row-arr"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
-        </div>
-        <div class="set-row" onclick="el('app').style.display='none';showScr('s1');T('Выход выполнен')">
-          <div class="set-row-left"><div class="set-row-icon"><svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg></div><span class="set-row-text">Выйти</span></div>
-          <div class="set-row-arr"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
-        </div>
-      </div>
-    </div>
+// ДЕТАЛИ ЗАКАЗА
+function openJobDetail(jobId) {
+  currentJobId = jobId;
+  firebase.database().ref('jobs/' + jobId).once('value', function(snap) {
+    var j = snap.val();
+    if (!j) return;
+    var isEmployer = j.employerHuid === U.huid;
+    var cat = jobCategories.find(function(c){return c.id===j.category;}) || {icon:'🔧',name:'Другое'};
+    var alreadyApplied = j.applicants && j.applicants[U.huid.replace(/[^a-zA-Z0-9]/g,'')];
+    el('job-detail').innerHTML =
+      '<div class="pg-head" style="background:white;padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);">'
+      + '<button class="pg-back" onclick="closeJobDetail()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>'
+      + '<span style="font-size:17px;font-weight:700;">Детали заказа</span></div>'
+      + '<div style="padding:16px;overflow-y:auto;flex:1;">'
+      + '<div style="font-size:11px;color:var(--text2);margin-bottom:4px;">' + cat.icon + ' ' + cat.name + ' · ' + j.location + '</div>'
+      + '<div style="font-size:20px;font-weight:900;color:var(--text);margin-bottom:8px;">' + j.title + '</div>'
+      + '<div style="font-size:24px;font-weight:900;color:var(--green);margin-bottom:16px;">' + j.price + '</div>'
+      + '<div class="card"><div class="section-title">Описание</div><div style="font-size:14px;color:var(--text);line-height:1.7;">' + j.desc + '</div></div>'
+      + '<div class="card"><div class="section-title">Работодатель</div><div style="font-size:14px;font-weight:600;">' + j.employer + '</div></div>'
+      + (isEmployer ? renderApplicants(j) :
+          alreadyApplied ? '<div style="text-align:center;padding:20px;font-size:15px;font-weight:700;color:var(--green);">✅ Вы уже откликнулись</div>'
+          : j.status === 'closed' ? '<div style="text-align:center;padding:20px;font-size:14px;color:var(--text2);">🔒 Заказ закрыт</div>'
+          : '<button class="btn" onclick="applyToJob(\''+j.id+'\',this)">Откликнуться</button>')
+      + '</div>';
+    el('job-detail').style.display = 'flex';
+  });
+}
 
-  </div>
+function renderApplicants(j) {
+  if (!j.applicants || Object.keys(j.applicants).length === 0) {
+    return '<div class="card"><div class="section-title">Отклики</div><div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">Откликов пока нет</div></div>';
+  }
+  var apps = Object.values(j.applicants);
+  return '<div class="card"><div class="section-title">Отклики (' + apps.length + ')</div>'
+    + apps.map(function(a) {
+      var isSelected = j.selectedWorker === a.huid;
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">'
+        + '<div><div style="font-size:14px;font-weight:600;">' + a.name + (isSelected ? ' ✅' : '') + '</div>'
+        + '<div style="font-size:11px;color:var(--text2);">' + a.huid + '</div></div>'
+        + '<div style="display:flex;gap:8px;">'
+        + (j.status === 'closed'
+          ? (isSelected ? '<span style="font-size:12px;color:var(--green);font-weight:700;padding:6px;">Выбран</span>' : '')
+          : '<button style="padding:6px 14px;background:var(--green);color:white;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;" onclick="selectApplicant(\''+j.id+'\',\''+a.huid+'\')">✓ Выбрать</button>')
+        + '<button style="padding:6px 14px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;" onclick="openJobChat(\''+j.id+'\',\''+a.huid+'\',\''+a.name+'\')">💬 Чат</button>'
+        + '</div></div>';
+    }).join('')
+    + '</div>';
+}
 
-  <!-- Навбар -->
-  <nav class="navbar">
-    <button class="nav-btn on" id="nav-home" onclick="switchTab('home')">
-      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-      <span>Главная</span>
-    </button>
-    <button class="nav-btn" id="nav-map" onclick="switchTab('map')">
-      <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
-      <span>Карта</span>
-    </button>
-    <button class="nav-btn" id="nav-chat" onclick="switchTab('chat')">
-      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
-      <span>ALAI</span>
-    </button>
-    <button class="nav-btn" id="nav-prof" onclick="switchTab('prof')">
-      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-      <span>Профиль</span>
-    </button>
-  </nav>
-</div>
+function selectApplicant(jobId, workerHuid) {
+  firebase.database().ref('jobs/' + jobId + '/status').set('closed');
+  firebase.database().ref('jobs/' + jobId + '/selectedWorker').set(workerHuid);
+  T('✅ Работник выбран!');
+  closeJobDetail();
+}
 
-<!-- ── СТРАНИЦЫ ── -->
+function closeJobDetail() {
+  el('job-detail').style.display = 'none';
+}
 
-<!-- Патент -->
-<div id="pg-pat" class="pg">
-  <div class="pg-head">
-    <button class="pg-back" onclick="closePg('pg-pat')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-    <span class="pg-head-title">🛠️ Патентная мастерская</span>
-  </div>
-  <div class="pg-body">
-    <div id="pat-view" style="display:none;margin-bottom:16px;"></div>
-    <div id="pat-empty" style="text-align:center;padding:16px 0 20px;">
-      <svg width="56" height="56" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z" fill="#21A038" opacity="0.3"/></svg>
-      <div style="font-size:14px;color:var(--text2);margin-top:8px;">Нет зарегистрированных изобретений</div>
-    </div>
-    <div class="card">
-      <div class="section-title">+ Новое изобретение</div>
-      <select class="inp" id="inv-niche" style="-webkit-appearance:none;">
-        <option value="">Выберите нишу...</option>
-        <option value="IT">💻 Информационные технологии</option>
-        <option value="MED">🏥 Медицина и здоровье</option>
-        <option value="AGR">🌾 Сельское хозяйство</option>
-        <option value="ENE">⚡ Энергетика</option>
-        <option value="TRN">🚗 Транспорт</option>
-        <option value="ECO">🌍 Экология</option>
-        <option value="EDU">📚 Образование</option>
-        <option value="FIN">💰 Финансы и блокчейн</option>
-        <option value="SEC">🛡️ Безопасность</option>
-        <option value="OTH">🔧 Другое</option>
-      </select>
-      <input class="inp" id="inv-t" placeholder="Название изобретения">
-      <textarea class="inp" id="inv-d" placeholder="Описание — что делает, как работает, в чём уникальность..." rows="4" style="resize:none;"></textarea>
-      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Уровень защиты</div>
-      <div style="display:flex;gap:8px;margin-bottom:16px;">
-        <div id="lv1" class="lv-btn on" onclick="slv(1)"><div class="lv-num">L1</div><div class="lv-name">Timestamp</div><div class="lv-price">$0.99</div></div>
-        <div id="lv2" class="lv-btn" onclick="slv(2)"><div class="lv-num">L2</div><div class="lv-name">Prior Art</div><div class="lv-price">$9.99</div></div>
-        <div id="lv3" class="lv-btn" onclick="slv(3)"><div class="lv-num">L3</div><div class="lv-name">Certificate</div><div class="lv-price">$49.99</div></div>
-      </div>
-      <button class="btn" onclick="tryFixInv()">🛡️ Приложить чип и зафиксировать</button>
-    </div>
-  </div>
-</div>
+// ЧАТ
+var chatRef = null;
+var chatJobId = null;
+var chatWorkerHuid = null;
 
-<!-- Работа -->
-<div id="pg-jobs" class="pg">
-  <div class="pg-head">
-    <button class="pg-back" onclick="closePg('pg-jobs')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-    <span class="pg-head-title">🤝 Биржа труда</span>
-  </div>
-  <div class="pg-body">
+function openJobChat(jobId, workerHuid, workerName) {
+  if (chatRef) { chatRef.off(); chatRef = null; }
+  chatJobId = jobId;
+  chatWorkerHuid = workerHuid;
+  var chatTitle = el('job-chat-title');
+  if (chatTitle) chatTitle.innerText = workerName;
+  el('job-chat-msgs').innerHTML = '';
+  el('job-chat').style.display = 'flex';
+  var chatKey = (jobId + '_' + workerHuid).replace(/[^a-zA-Z0-9]/g,'').substring(0,60);
+  if (!window.firebase || !firebase.apps.length) { T('Нет соединения'); return; }
+  chatRef = firebase.database().ref('job_chats/' + chatKey);
+  chatRef.on('child_added', function(snap) {
+    var msg = snap.val();
+    if (!msg) return;
+    var msgs = el('job-chat-msgs');
+    var isMe = msg.senderHuid === U.huid;
+    var d = document.createElement('div');
+    d.className = 'msg ' + (isMe ? 'user' : 'bot');
+    d.innerHTML = '<div style="font-size:10px;opacity:0.7;margin-bottom:2px;">' + (isMe ? 'Вы' : msg.senderName) + '</div>' + msg.text;
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+  });
+}
 
-    <!-- Выбор роли -->
-    <div id="jobs-role">
-      <div style="text-align:center;padding:16px 0 24px;">
-        <div style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px;">Кто вы?</div>
-        <div style="font-size:14px;color:var(--text2);">Выберите роль для продолжения</div>
-      </div>
-      <div onclick="selectRole('employer')" style="background:var(--green);border-radius:20px;padding:24px;margin-bottom:12px;cursor:pointer;display:flex;align-items:center;gap:16px;">
-        <div style="font-size:40px;">👔</div>
-        <div><div style="font-size:18px;font-weight:900;color:white;">Работодатель</div><div style="font-size:13px;color:rgba(255,255,255,0.8);">Разместить заказ, выбрать исполнителя</div></div>
-      </div>
-      <div onclick="selectRole('worker')" style="background:white;border-radius:20px;padding:24px;cursor:pointer;display:flex;align-items:center;gap:16px;border:2px solid var(--border);">
-        <div style="font-size:40px;">🧑‍💼</div>
-        <div><div style="font-size:18px;font-weight:900;color:var(--text);">Работник</div><div style="font-size:13px;color:var(--text2);">Найти заказ и откликнуться</div></div>
-      </div>
-    </div>
+function sendJobChatMsg() {
+  var inp = el('job-chat-inp');
+  if (!inp || !inp.value.trim()) return;
+  var text = inp.value.trim();
+  inp.value = '';
+  if (!chatRef) { T('Нет соединения'); return; }
+  chatRef.push({ text: text, senderName: U.name, senderHuid: U.huid, time: Date.now() });
+}
 
-    <!-- Работодатель -->
-    <div id="jobs-employer" style="display:none;">
-      <div id="jobs-employer-home">
-        <button class="btn" onclick="showPostJob()">+ Разместить заказ</button>
-        <div class="section-title">Мои заказы</div>
-        <div id="my-jobs-list"><div style="text-align:center;padding:20px;color:var(--text2);font-size:13px;">Нет активных заказов</div></div>
-        <button class="btn-ghost" onclick="el('jobs-employer').style.display='none';el('jobs-role').style.display='block';">← Сменить роль</button>
-      </div>
-      <!-- Выбор категории -->
-      <div id="jobs-cat-select" style="display:none;">
-        <div style="font-size:17px;font-weight:700;margin-bottom:16px;">Выберите категорию</div>
-        <div id="jobs-cat-list"></div>
-        <button class="btn-ghost" onclick="el('jobs-cat-select').style.display='none';el('jobs-employer-home').style.display='block';">← Назад</button>
-      </div>
-      <!-- Форма заказа -->
-      <div id="jobs-post-form" style="display:none;">
-        <div style="font-size:17px;font-weight:700;margin-bottom:4px;">Новый заказ</div>
-        <div id="jobs-post-cat-label" style="font-size:13px;color:var(--green);font-weight:600;margin-bottom:16px;"></div>
-        <input class="inp" id="jp-title" placeholder="Название заказа">
-        <textarea class="inp" id="jp-desc" placeholder="Подробное описание задания..." rows="4" style="resize:none;"></textarea>
-        <input class="inp" id="jp-price" placeholder="Оплата (напр. 15 000₸)">
-        <input class="inp" id="jp-location" placeholder="Местоположение (или Удалённо)">
-        <button class="btn" onclick="postNewJob()">📢 Опубликовать заказ</button>
-        <button class="btn-ghost" onclick="el('jobs-post-form').style.display='none';el('jobs-employer-home').style.display='block';">← Назад</button>
-      </div>
-    </div>
+function closeJobChat() {
+  if (chatRef) { chatRef.off(); chatRef = null; }
+  el('job-chat').style.display = 'none';
+}
 
-    <!-- Работник -->
-    <div id="jobs-worker" style="display:none;">
-      <div style="overflow-x:auto;white-space:nowrap;margin-bottom:16px;padding-bottom:4px;">
-        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="loadJobs()">Все</button>
-        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="filterJobs('it')">💻 IT</button>
-        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="filterJobs('transport')">🚗 Транспорт</button>
-        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="filterJobs('build')">🏗️ Стройка</button>
-        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="filterJobs('clean')">🧹 Уборка</button>
-        <button class="job-tag" style="padding:8px 14px;cursor:pointer;margin-right:6px;font-size:13px;" onclick="filterJobs('other')">🔧 Другое</button>
-      </div>
-      <div id="worker-jobs-list"><div style="text-align:center;padding:20px;color:var(--text2);">Загрузка...</div></div>
-      <button class="btn-ghost" style="margin-top:8px;" onclick="el('jobs-worker').style.display='none';el('jobs-role').style.display='block';">← Сменить роль</button>
-    </div>
+// РЕЙТИНГ
+function openRating(jobId, targetHuid, targetName) {
+  el('rating-title').innerText = 'Оценить: ' + targetName;
+  el('rating-job-id').value = jobId;
+  el('rating-target').value = targetHuid;
+  el('rating-panel').style.display = 'flex';
+  renderStars(0);
+}
 
-  </div>
-</div>
+var selectedRating = 0;
+function renderStars(n) {
+  selectedRating = n;
+  var s = el('rating-stars');
+  if (!s) return;
+  s.innerHTML = [1,2,3,4,5].map(function(i) {
+    return '<span onclick="renderStars('+i+')" style="font-size:36px;cursor:pointer;">' + (i<=n?'⭐':'☆') + '</span>';
+  }).join('');
+}
 
-<!-- Детали заказа -->
-<div id="job-detail" style="display:none;position:fixed;inset:0;z-index:3000;background:var(--bg);flex-direction:column;overflow-y:auto;"></div>
+function submitRating() {
+  if (!selectedRating) { T('Поставьте оценку'); return; }
+  var jobId = el('rating-job-id').value;
+  var targetHuid = el('rating-target').value;
+  var review = el('rating-review').value.trim();
+  firebase.database().ref('ratings/' + targetHuid.replace(/[^a-zA-Z0-9]/g,'')).push({
+    rating: selectedRating, review: review, from: U.name, fromHuid: U.huid, jobId: jobId, time: Date.now()
+  }).then(function(){ T('⭐ Оценка отправлена!'); el('rating-panel').style.display='none'; });
+}
 
-<!-- Чат по заказу -->
-<div id="job-chat" style="display:none;position:fixed;inset:0;z-index:4000;background:var(--bg);flex-direction:column;">
-  <div class="pg-head">
-    <button class="pg-back" onclick="closeJobChat()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-    <span class="pg-head-title" id="job-chat-title">Чат</span>
-  </div>
-  <div id="job-chat-msgs" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
-  <div class="chat-input-row">
-    <input class="chat-inp" id="job-chat-inp" placeholder="Сообщение..." onkeydown="if(event.key==='Enter')sendJobChatMsg()">
-    <button class="chat-send" onclick="sendJobChatMsg()"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
-  </div>
-</div>
+function closeRating() { el('rating-panel').style.display = 'none'; }
 
-<!-- Рейтинг -->
-<div id="rating-panel" style="display:none;position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,0.7);align-items:flex-end;">
-  <div style="background:white;border-radius:24px 24px 0 0;padding:24px;width:100%;">
-    <div style="font-size:18px;font-weight:700;margin-bottom:16px;" id="rating-title">Оценить</div>
-    <input type="hidden" id="rating-job-id">
-    <input type="hidden" id="rating-target">
-    <div id="rating-stars" style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;"></div>
-    <textarea class="inp" id="rating-review" placeholder="Отзыв (необязательно)" rows="3" style="resize:none;"></textarea>
-    <button class="btn" onclick="submitRating()">⭐ Отправить оценку</button>
-    <button class="btn-ghost" onclick="closeRating()">Отмена</button>
-  </div>
-</div>
-
-<!-- Кошелёк -->
-<div id="pg-wal" class="pg">
-  <div class="pg-head">
-    <button class="pg-back" onclick="closePg('pg-wal')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-    <span class="pg-head-title">Кошелёк</span>
-  </div>
-  <div class="pg-body">
-    <div class="wallet-card">
-      <div class="wallet-balance-label">Баланс BSMLH Token</div>
-      <div><span class="wallet-balance">0.00</span><span class="wallet-currency"> BST</span></div>
-      <div style="font-size:11px;opacity:0.6;margin-top:4px;">Токен запускается в 2026</div>
-      <div class="wallet-actions">
-        <button class="wallet-btn" onclick="T('Скоро будет доступно')">↑ Пополнить</button>
-        <button class="wallet-btn" onclick="T('Скоро будет доступно')">↓ Вывести</button>
-        <button class="wallet-btn" onclick="T('Скоро будет доступно')">⇄ Обмен</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="section-title">Мой адрес</div>
-      <div id="wal-addr" style="font-size:12px;color:var(--text2);word-break:break-all;padding:8px 0;">Генерируется после входа...</div>
-      <button class="btn-ghost" style="margin-top:8px;" onclick="copyAddr()">📋 Скопировать адрес</button>
-    </div>
-    <div class="card" style="background:var(--green-light);border:1.5px solid var(--green);">
-      <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:4px;">🚀 BST Token</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.6;">BSMLH Security Token запускается в 2026. Все зарегистрированные пользователи получат начальный баланс автоматически.</div>
-    </div>
-  </div>
-</div>
-
-<!-- Инвестиции -->
-<div id="pg-fund" class="pg">
-  <div class="pg-head">
-    <button class="pg-back" onclick="closePg('pg-fund')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-    <span class="pg-head-title">Инвестиции</span>
-  </div>
-  <div class="pg-body">
-    <div class="card" style="background:linear-gradient(135deg,var(--green),var(--green-dark));color:white;margin-bottom:16px;">
-      <div style="font-size:12px;opacity:0.8;margin-bottom:4px;">Портфель</div>
-      <div style="font-size:28px;font-weight:900;">$0.00</div>
-      <div style="font-size:12px;opacity:0.7;margin-top:4px;">BSMLH Token — в разработке</div>
-    </div>
-    <div class="section-title">Активы</div>
-    <div class="card">
-      <div class="invest-row"><div class="invest-left"><div class="invest-icon">₿</div><div><div class="invest-name">Bitcoin</div><div class="invest-sub">BTC</div></div></div><div class="invest-val"><div class="invest-price">$67,420</div><div class="invest-change">+2.4%</div></div></div>
-      <div class="invest-row"><div class="invest-left"><div class="invest-icon">Ξ</div><div><div class="invest-name">Ethereum</div><div class="invest-sub">ETH</div></div></div><div class="invest-val"><div class="invest-price">$3,240</div><div class="invest-change">+1.8%</div></div></div>
-      <div class="invest-row"><div class="invest-left"><div class="invest-icon">🟢</div><div><div class="invest-name">BSMLH Token</div><div class="invest-sub">BST</div></div></div><div class="invest-val"><div class="invest-price">—</div><div class="invest-change" style="color:var(--text2);">Скоро</div></div></div>
-    </div>
-  </div>
-</div>
-
-<!-- NFC Чип -->
-<div id="pg-chip" class="pg">
-  <div class="pg-head">
-    <button class="pg-back" onclick="closePg('pg-chip')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-    <span class="pg-head-title">NFC Чип</span>
-  </div>
-  <div class="pg-body">
-    <div class="nfc-card">
-      <div class="nfc-icon"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 14H9V8h6v2h-4v1h4v2h-4v1h4v2z"/></svg></div>
-      <div class="nfc-label" id="chip-status-label">ЧИП НЕ АКТИВИРОВАН</div>
-      <div class="nfc-status" id="nst2">Поднесите чип к задней части телефона</div>
-      <div id="beam2" style="display:none;width:100%;height:3px;background:var(--green);border-radius:99px;animation:pulse 1s infinite;margin-top:8px;"></div>
-    </div>
-    <div id="chip-uid-block" style="display:none;" class="card">
-      <div class="card-title">UID Чипа</div>
-      <div id="chip-uid-val" style="font-size:15px;word-break:break-all;font-family:monospace;font-weight:600;color:var(--green);margin-top:4px;"></div>
-      <button class="btn-ghost" style="margin-top:10px;" onclick="copyUID()">📋 Скопировать UID</button>
-    </div>
-    <div class="card">
-      <div class="section-title">О чипе BSMLH</div>
-      <div style="font-size:14px;color:var(--text2);line-height:1.7;">BSMLH Chip — физический NFC-чип стандарта <b>NTAG213</b>. После активации привязывается к вашему HUID и используется как физический ключ для входа и подписания документов.</div>
-    </div>
-    <button class="btn" id="nbtn2" onclick="nfcActivate(2)">🛡️ Сканировать чип</button>
-  </div>
-</div>
-
-<!-- Настройки -->
-<div id="pg-set" class="pg">
-  <div class="pg-head">
-    <button class="pg-back" onclick="closePg('pg-set')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-    <span class="pg-head-title">Настройки</span>
-  </div>
-  <div class="pg-body">
-    <div class="prof-hero">
-      <div class="prof-av"><img id="set-av" src="" style="display:none"><span id="set-av-ph" class="prof-av-ph">А</span></div>
-      <div class="prof-name" id="set-name">ИМЯ</div>
-      <div class="prof-huid" id="set-huid">BSMLH-2026-...</div>
-    </div>
-    <div class="card">
-      <div class="set-row">
-        <div class="set-row-left"><div class="set-row-icon"><svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></div><span class="set-row-text" id="set-phone">Телефон не указан</span></div>
-        <div class="set-row-arr"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
-      </div>
-      <div class="set-row">
-        <div class="set-row-left"><div class="set-row-icon"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></div><span class="set-row-text" id="set-chip-txt">Чип не активирован</span></div>
-        <div class="set-row-arr"><svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></div>
-      </div>
-    </div>
-    <button class="btn" style="background:#EF4444;margin-top:16px;" onclick="el('app').style.display='none';showScr('s1');T('Выход выполнен')">Выйти из аккаунта</button>
-  </div>
-</div>
-
-<!-- ── OVERLAY ЧИПА ── -->
-<div id="chip-overlay">
-  <div class="chip-overlay-icon">
-    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-5 14H9V8h6v2h-4v1h4v2h-4v1h4v2z"/></svg>
-  </div>
-  <div class="chip-overlay-title" id="chip-overlay-title">Поднесите чип к телефону...</div>
-  <div class="chip-overlay-sub" id="chip-overlay-sub">Задняя часть телефона · NTAG213</div>
-  <div class="chip-overlay-bar"></div>
-</div>
-
-<!-- ── СЕРТИФИКАТ ── -->
-<div id="cert-page">
-  <div class="cert-wrap">
-    <div class="cert-header">
-      <div class="cert-logo-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
-      </div>
-      <div class="cert-title">BSMLH</div>
-      <div class="cert-subtitle">Сертификат авторского приоритета</div>
-    </div>
-    <div class="cert-field"><label>Автор</label><p id="cert-author">—</p></div>
-    <div class="cert-field"><label>HUID</label><p class="mono" id="cert-huid">—</p></div>
-    <div class="cert-field"><label>Изобретение</label><p id="cert-title-txt">—</p></div>
-    <div class="cert-field"><label>Описание</label><p id="cert-desc">—</p></div>
-    <div style="display:flex;gap:12px;">
-      <div class="cert-field" style="flex:1;"><label>Ниша</label><p id="cert-niche">—</p></div>
-      <div class="cert-field" style="flex:1;"><label>Уровень</label><p id="cert-level" style="color:var(--green);font-weight:700;">—</p></div>
-    </div>
-    <div class="cert-field"><label>ID документа</label><p class="mono" id="cert-inv-id">—</p></div>
-    <div class="cert-field"><label>Дата фиксации</label><p id="cert-time">—</p></div>
-    <div class="cert-field"><label>SHA хэш</label><p class="mono" id="cert-hash">—</p></div>
-    <div class="cert-qr">
-      <img id="cert-qr-img" src="" alt="QR">
-      <div class="cert-qr-label">Скан для верификации</div>
-    </div>
-    <div class="cert-footer">
-      Настоящий сертификат подтверждает факт фиксации авторского приоритета в системе BSMLH с применением биометрической идентификации NFC-чипа.
-      <div class="cert-verified">✓ BSMLH VERIFIED</div>
-    </div>
-    <button class="btn" onclick="window.print()" style="margin-bottom:10px;">🖨️ Сохранить как PDF</button>
-    <button class="btn-ghost" onclick="closeCert()">← Назад</button>
-  </div>
-</div>
-
-<!-- ── ТОСТ ── -->
-<div class="toast" id="toast"></div>
-
-<!-- ── СКРИПТЫ (в конце — не блокируют загрузку) ── -->
-<script src="js/app.js"></script>
-<script src="js/jobs.js"></script>
-<script src="js/map.js"></script>
-<script src="js/nfc.js"></script>
-<script src="js/patent.js"></script>
-<script src="js/firebase.js"></script>
-
-<script>
-// Загрузить Firebase через 2 сек после загрузки страницы
-setTimeout(function(){ loadFirebase(); setTimeout(initJobsDB, 3000); }, 2000);
-</script>
-
-</body>
-</html>
+// ФИЛЬТР
+function filterJobs(catId) {
+  var list = el('worker-jobs-list');
+  firebase.database().ref('jobs').on('value', function(snap) {
+    var jobs = snap.val();
+    if (!jobs) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);">Нет заказов</div>'; return; }
+    var myKey = U.huid.replace(/[^a-zA-Z0-9]/g,'');
+    var filtered = Object.values(jobs).filter(function(j){
+      var iApplied = j.applicants && j.applicants[myKey];
+      var visible = j.status === 'open' || iApplied || j.selectedWorker === U.huid;
+      return visible && (!catId || j.category === catId);
+    });
+    if (!filtered.length) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);">Нет заказов в этой категории</div>'; return; }
+    list.innerHTML = filtered.reverse().map(function(j) {
+      var cat = jobCategories.find(function(c){return c.id===j.category;})||{icon:'🔧'};
+      return '<div class="job-item" onclick="openJobDetail(\''+j.id+'\')" style="cursor:pointer;">'
+        + '<div class="job-company">' + cat.icon + ' ' + j.employer + '</div>'
+        + '<div class="job-title">' + j.title + '</div>'
+        + '<div style="font-size:13px;color:var(--text2);margin-bottom:8px;">' + j.desc.substring(0,80) + '...</div>'
+        + '<div class="job-tags"><span class="job-tag">'+j.price+'</span><span class="job-tag">'+j.location+'</span></div>'
+        + '</div>';
+    }).join('');
+  });
+}
