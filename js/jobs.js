@@ -166,7 +166,7 @@ function finishJob(jobId, workerHuid, employerHuid) {
       if (U.huid === workerHuid) {
         openRating(jobId, employerHuid, j.employer, 'worker');
       } else {
-        openRating(jobId, workerHuid, j.employer, 'employer');
+        openRating(jobId, workerHuid, j.selectedWorkerName || 'Работник', 'employer');
       }
     });
   }, 800);
