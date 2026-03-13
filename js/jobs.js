@@ -158,6 +158,15 @@ function completeJobWorker(jobId, employerHuid) {
 function selectApplicant(jobId, workerHuid) {
   firebase.database().ref('jobs/' + jobId + '/status').set('closed');
   firebase.database().ref('jobs/' + jobId + '/selectedWorker').set(workerHuid);
+  firebase.database().ref('jobs/' + jobId + '/applicants').once('value', function(snap) {
+    var apps = snap.val(); if (!apps) return;
+    Object.values(apps).forEach(function(a) {
+      if (a.huid === workerHuid) {
+        firebase.database().ref('jobs/' + jobId + '/selectedWorkerName').set(a.name);
+        listenJobDone(jobId, workerHuid, U.huid, U.name, a.name);
+      }
+    });
+  });
   var app = Object.values(arguments).length;
   firebase.database().ref('jobs/' + jobId + '/applicants').once('value', function(snap) {
     var apps = snap.val();
