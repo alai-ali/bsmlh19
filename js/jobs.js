@@ -155,22 +155,20 @@ function completeJobWorker(jobId, employerHuid) {
 }
 
 // ФИНАЛЬНОЕ ЗАВЕРШЕНИЕ — оба подтвердили
-function finishJob(jobId, workerHuid, employerHuid) {
-  firebase.database().ref('jobs/' + jobId + '/status').set('done');
-  addToken(workerHuid, 'qrt', 1);
-  addToken(employerHuid, 'qrt', 0.1);
-  T('🎉 Заказ завершён! Начислены QRT токены');
-  setTimeout(function() {
-    firebase.database().ref('jobs/' + jobId).once('value', function(snap) {
-      var j = snap.val(); if (!j) return;
-      if (U.huid === workerHuid) {
-        openRating(jobId, employerHuid, j.employer, 'worker');
-      } else {
-        openRating(jobId, workerHuid, j.selectedWorkerName || 'Работник', 'employer');
-      }
-    });
-  }, 800);
-}
+function selectApplicant(jobId, workerHuid) {
+  firebase.database().ref('jobs/' + jobId + '/status').set('closed');
+  firebase.database().ref('jobs/' + jobId + '/selectedWorker').set(workerHuid);
+  var app = Object.values(arguments).length;
+  firebase.database().ref('jobs/' + jobId + '/applicants').once('value', function(snap) {
+    var apps = snap.val();
+    if (apps) {
+      Object.values(apps).forEach(function(a) {
+        if (a.huid === workerHuid) {
+          firebase.database().ref('jobs/' + jobId + '/selectedWorkerName').set(a.name);
+        }
+      });
+    }
+  });
 
 // РАБОТНИК
 function loadJobs() {
