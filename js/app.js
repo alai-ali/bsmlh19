@@ -52,9 +52,22 @@ function showSMS() { showScr('s4'); }
 
 // ── ЗАПУСК ПРИЛОЖЕНИЯ ──
 function toApp() {
+  try {
+  var saved = localStorage.getItem('bsmlh_huid');
+  if (saved) {
+    U.huid = saved;
+  } else {
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', uid = '';
+    for (var i = 0; i < 16; i++) uid += chars[Math.floor(Math.random() * chars.length)];
+    U.huid = 'BSMLH-2026-' + uid;
+    localStorage.setItem('bsmlh_huid', U.huid);
+    localStorage.setItem('bsmlh_name', U.name);
+  }
+} catch(e) {
   var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', uid = '';
   for (var i = 0; i < 16; i++) uid += chars[Math.floor(Math.random() * chars.length)];
   U.huid = 'BSMLH-2026-' + uid;
+}
 
   // Имя
   ['id-name','p-name','set-name'].forEach(function(id){ var e=el(id); if(e) e.innerText=U.name.toUpperCase(); });
