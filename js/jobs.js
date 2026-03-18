@@ -134,11 +134,19 @@ function addToken(userHuid, type, amount) {
 function completeJobEmployer(jobId, workerHuid) {
   firebase.database().ref('jobs/' + jobId + '/confirmedEmployer').set(true).then(function() {
     T('✅ Вы подтвердили завершение');
+    closeJobDetail();
     firebase.database().ref('jobs/' + jobId).once('value', function(snap) {
       var j = snap.val();
-      if (j && j.confirmedWorker) finishJob(jobId, workerHuid, j.employerHuid);
+      if (j && j.confirmedWorker) {
+        firebase.database().ref('jobs/' + jobId + '/status').set('done');
+        addToken(workerHuid, 'qrt', 1);
+        addToken(j.employerHuid, 'qrt', 0.1);
+        T('🎉 Заказ завершён! Начислены QRT');
+        setTimeout(function() {
+          openRating(jobId, workerHuid, j.selectedWorkerName || 'Работник', 'employer');
+        }, 800);
+      }
     });
-    closeJobDetail();
   });
 }
 
@@ -146,38 +154,21 @@ function completeJobEmployer(jobId, workerHuid) {
 function completeJobWorker(jobId, employerHuid) {
   firebase.database().ref('jobs/' + jobId + '/confirmedWorker').set(true).then(function() {
     T('✅ Вы подтвердили завершение');
+    closeJobDetail();
     firebase.database().ref('jobs/' + jobId).once('value', function(snap) {
       var j = snap.val();
-      if (j && j.confirmedEmployer) finishJob(jobId, U.huid, employerHuid);
-    });
-    closeJobDetail();
-  });
-}
-
-// ФИНАЛЬНОЕ ЗАВЕРШЕНИЕ — оба подтвердили
-function selectApplicant(jobId, workerHuid) {
-  firebase.database().ref('jobs/' + jobId + '/status').set('closed');
-  firebase.database().ref('jobs/' + jobId + '/selectedWorker').set(workerHuid);
-  firebase.database().ref('jobs/' + jobId + '/applicants').once('value', function(snap) {
-    var apps = snap.val(); if (!apps) return;
-    Object.values(apps).forEach(function(a) {
-      if (a.huid === workerHuid) {
-        firebase.database().ref('jobs/' + jobId + '/selectedWorkerName').set(a.name);
-        listenJobDone(jobId, workerHuid, U.huid, U.name, a.name);
+      if (j && j.confirmedEmployer) {
+        firebase.database().ref('jobs/' + jobId + '/status').set('done');
+        addToken(U.huid, 'qrt', 1);
+        addToken(employerHuid, 'qrt', 0.1);
+        T('🎉 Заказ завершён! Начислены QRT');
+        setTimeout(function() {
+          openRating(jobId, employerHuid, j.employer, 'worker');
+        }, 800);
       }
     });
   });
-  var app = Object.values(arguments).length;
-  firebase.database().ref('jobs/' + jobId + '/applicants').once('value', function(snap) {
-    var apps = snap.val();
-    if (apps) {
-      Object.values(apps).forEach(function(a) {
-        if (a.huid === workerHuid) {
-          firebase.database().ref('jobs/' + jobId + '/selectedWorkerName').set(a.name);
-        }
-      });
-    }
-  });
+}
 
 // РАБОТНИК
 function loadJobs() {
@@ -264,7 +255,7 @@ function openJobDetail(jobId) {
       + '<div style="font-size:24px;font-weight:900;color:var(--green);margin-bottom:16px;">' + j.price + '</div>'
       + '<div class="card"><div class="section-title">Описание</div><div style="font-size:14px;color:var(--text);line-height:1.7;">' + j.desc + '</div></div>'
       + '<div class="card"><div class="section-title">Работодатель</div><div style="font-size:14px;font-weight:600;">' + j.employer + '</div></div>'
-     + (isEmployer ? renderApplicants(j) :
+      + (isEmployer ? renderApplicants(j) :
           j.status === 'done' ? '<div style="text-align:center;padding:20px;font-size:14px;color:#059669;font-weight:600;">✅ Заказ завершён</div>' :
           alreadyApplied && j.selectedWorker === U.huid && j.status === 'closed' ? (!j.confirmedWorker
             ? '<button class="btn" style="background:#059669;" onclick="completeJobWorker(\''+j.id+'\',\''+j.employerHuid+'\')">✅ Подтвердить завершение</button>'
@@ -309,6 +300,16 @@ function renderApplicants(j) {
 function selectApplicant(jobId, workerHuid) {
   firebase.database().ref('jobs/' + jobId + '/status').set('closed');
   firebase.database().ref('jobs/' + jobId + '/selectedWorker').set(workerHuid);
+  firebase.database().ref('jobs/' + jobId + '/applicants').once('value', function(snap) {
+    var apps = snap.val();
+    if (apps) {
+      Object.values(apps).forEach(function(a) {
+        if (a.huid === workerHuid) {
+          firebase.database().ref('jobs/' + jobId + '/selectedWorkerName').set(a.name);
+        }
+      });
+    }
+  });
   T('✅ Работник выбран!');
   closeJobDetail();
 }
@@ -349,6 +350,7 @@ function openJobChat(jobId, workerHuid, workerName) {
 function sendJobChatMsg() {
   var inp = el('job-chat-inp');
   if (!inp || !inp.value.trim()) return;
+  if (inp.value.trim().length > 500) { T('Максимум 500 символов'); return; }
   var text = inp.value.trim();
   inp.value = '';
   if (!chatRef) { T('Нет соединения'); return; }
@@ -392,14 +394,16 @@ function submitRating() {
     from: U.name, fromHuid: U.huid,
     jobId: jobId, time: Date.now()
   }).then(function() {
-    // Начисляем QRNC только работнику и только за 4-5 звёзд
     if (targetRole === 'worker') {
       if (selectedRating === 5) {
         addToken(targetHuid, 'qrnc', 1);
         T('⭐ Оценка отправлена! +1 QRNC');
       } else if (selectedRating === 4) {
-        addToken(targetHuid, 'qrnc', 0.5)// 4 stars;
+        addToken(targetHuid, 'qrnc', 0.5);
         T('⭐ Оценка отправлена! +0.5 QRNC');
+      } else if (selectedRating === 3) {
+        addToken(targetHuid, 'qrnc', 0.1);
+        T('⭐ Оценка отправлена! +0.1 QRNC');
       } else {
         T('⭐ Оценка отправлена!');
       }
