@@ -76,6 +76,10 @@ function loadFirebase() {
             messagingSenderId: '41774666354',
             appId: '1:41774666354:web:e200d57a0bab89e26be8eb'
           });
+           firebase.appCheck().activate(
+             '6LdHpJ8sAAAAAIh9DUbn3AN7dTFmPQWO2iY604JX',
+             true // автоматически обновлять токен
+  );
         }
         console.log('Firebase fully loaded');
         setTimeout(initJobsDB, 300);
