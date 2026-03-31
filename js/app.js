@@ -63,6 +63,19 @@ function toApp() {
     localStorage.setItem('bsmlh_huid', U.huid);
     localStorage.setItem('bsmlh_name', U.name);
   }
+    if (!saved) {
+  setTimeout(function() {
+    if (window.firebase && firebase.apps && firebase.apps.length) {
+      var key = U.huid.replace(/[^a-zA-Z0-9]/g, '');
+      var ref = firebase.database().ref('tokens/' + key + '/bsmlh');
+      ref.once('value', function(snap) {
+        if (!snap.val()) { // Только если ещё нет — нельзя начислить дважды
+          ref.set(1);
+        }
+      });
+    }
+  }, 3000);
+}
 } catch(e) {
   var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', uid = '';
   for (var i = 0; i < 16; i++) uid += chars[Math.floor(Math.random() * chars.length)];
