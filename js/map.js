@@ -6,16 +6,7 @@ var workersLayer = null;
 var currentFilter = '';
 
 function initMap() {
-  T('initMap старт');
   if (map) { map.invalidateSize(); return; }
-  if (window.L) {
-    createMap();
-  } else {
-    T('Leaflet не загружен!');
-  }
-}
-
-  // Загрузить Leaflet JS
   if (!window.L) {
     var s = document.createElement('script');
     s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
@@ -25,11 +16,21 @@ function initMap() {
     setTimeout(createMap, 300);
   }
 }
-}
+
 function createMap() {
   if (mapInitialized) return;
   mapInitialized = true;
-  map = L.map('map-container').setView([43.238, 76.889], 12); // Алматы
+
+  var mapEl = document.getElementById('map-container');
+  if (!mapEl) return;
+
+  // Заменяем iframe на div для Leaflet
+  var newDiv = document.createElement('div');
+  newDiv.id = 'map-container';
+  newDiv.style.cssText = 'width:100%;height:50vh;min-height:300px;border-radius:16px;border:none;margin-bottom:12px;';
+  mapEl.parentNode.replaceChild(newDiv, mapEl);
+
+  map = L.map('map-container').setView([43.238, 76.889], 12);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap',
@@ -38,7 +39,6 @@ function createMap() {
 
   workersLayer = L.layerGroup().addTo(map);
 
-  // Получить геолокацию пользователя
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function(pos) {
       var lat = pos.coords.latitude;
@@ -52,10 +52,11 @@ function createMap() {
     });
   }
 
+  renderMapFilters();
   loadWorkersOnMap();
 }
 
-// Категории с эмодзи
+// Категории
 var mapCategories = [
   { id:'', icon:'👥', name:'Все' },
   { id:'clean', icon:'🧹', name:'Уборка' },
@@ -96,21 +97,37 @@ function loadWorkersOnMap() {
     return;
   }
 
-  var ref = firebase.database().ref('workers');
-  var query = currentFilter ? ref.orderByChild('category').equalTo(currentFilter) : ref;
-
-  query.once('value', function(snap) {
-    var workers = snap.val();
-    if (!workers) { showDemoWorkers(); return; }
+  // Работники
+  var refW = firebase.database().ref('workers');
+  var queryW = currentFilter ? refW.orderByChild('category').equalTo(currentFilter) : refW;
+  queryW.once('value', function(snap) {
+    var workers = snap.val() || {};
     Object.values(workers).forEach(function(w) {
       if (!w.lat || !w.lng) return;
       addWorkerMarker(w);
     });
   });
+
+  // Работодатели (открытые заказы)
+  if (!currentFilter) {
+    firebase.database().ref('jobs').once('value', function(snap) {
+      var jobs = snap.val() || {};
+      Object.values(jobs).filter(function(j){ return j.status === 'open' && j.lat && j.lng; })
+        .forEach(function(j) {
+          addWorkerMarker({
+            name: j.employer,
+            category: j.category,
+            lat: j.lat, lng: j.lng,
+            isEmployer: true,
+            title: j.title,
+            price: j.price
+          });
+        });
+    });
+  }
 }
 
 function showDemoWorkers() {
-  // Демо работники вокруг Алматы
   var demos = [
     { name:'Айгерим', category:'clean', icon:'🧹', lat:43.245, lng:76.895, rating:4.8, qrnc:42 },
     { name:'Серик', category:'transport', icon:'🚗', lat:43.232, lng:76.901, rating:4.9, qrnc:87 },
@@ -125,8 +142,11 @@ function showDemoWorkers() {
 
 function addWorkerMarker(w) {
   var cat = mapCategories.find(function(c){ return c.id === w.category; }) || { icon:'👤' };
+  var displayIcon = w.isEmployer ? '👔' : (w.icon || cat.icon);
+  var borderColor = w.isEmployer ? '#2563EB' : '#21A038';
+
   var icon = L.divIcon({
-    html: '<div style="width:44px;height:44px;border-radius:50%;background:white;border:3px solid var(--green, #21A038);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 2px 8px rgba(0,0,0,0.2);">' + (w.icon || cat.icon) + '</div>',
+    html: '<div style="width:44px;height:44px;border-radius:50%;background:white;border:3px solid '+borderColor+';display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 2px 8px rgba(0,0,0,0.2);">' + displayIcon + '</div>',
     className: '',
     iconSize: [44, 44],
     iconAnchor: [22, 22]
@@ -140,25 +160,36 @@ function showWorkerCard(w) {
   var panel = document.getElementById('worker-card');
   if (!panel) return;
   var cat = mapCategories.find(function(c){ return c.id === w.category; }) || { icon:'👤', name:'Другое' };
-  panel.innerHTML =
-    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">'
-    + '<div style="width:56px;height:56px;border-radius:50%;background:var(--green-light);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:24px;">' + (w.icon||cat.icon) + '</div>'
-    + '<div><div style="font-size:17px;font-weight:700;">' + w.name + '</div>'
-    + '<div style="font-size:13px;color:var(--green);font-weight:600;">' + cat.name + '</div>'
-    + '<div style="font-size:12px;color:var(--text2);">⭐ ' + (w.rating||'—') + ' · 🏅 ' + (w.qrnc||0) + ' QRNC</div></div>'
-    + '<button onclick="document.getElementById(\'worker-card\').style.display=\'none\'" style="margin-left:auto;background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);">✕</button>'
-    + '</div>'
-    + '<button class="btn" onclick="openWorkerChat(\'' + (w.huid||'') + '\',\'' + w.name + '\')">💬 Написать</button>';
+
+  if (w.isEmployer) {
+    panel.innerHTML =
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">'
+      + '<div style="width:56px;height:56px;border-radius:50%;background:#EFF6FF;border:2px solid #2563EB;display:flex;align-items:center;justify-content:center;font-size:24px;">👔</div>'
+      + '<div><div style="font-size:17px;font-weight:700;">' + w.name + '</div>'
+      + '<div style="font-size:13px;color:#2563EB;font-weight:600;">' + (w.title||'') + '</div>'
+      + '<div style="font-size:12px;color:var(--text2);">💰 ' + (w.price||'—') + '</div></div>'
+      + '<button onclick="document.getElementById(\'worker-card\').style.display=\'none\'" style="margin-left:auto;background:none;border:none;font-size:20px;cursor:pointer;">✕</button>'
+      + '</div>'
+      + '<button class="btn" onclick="openPg(\'pg-jobs\')">📋 Смотреть заказы</button>';
+  } else {
+    panel.innerHTML =
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">'
+      + '<div style="width:56px;height:56px;border-radius:50%;background:var(--green-light);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:24px;">' + (w.icon||cat.icon) + '</div>'
+      + '<div><div style="font-size:17px;font-weight:700;">' + w.name + '</div>'
+      + '<div style="font-size:13px;color:var(--green);font-weight:600;">' + cat.name + '</div>'
+      + '<div style="font-size:12px;color:var(--text2);">⭐ ' + (w.rating||'—') + ' · 🏅 ' + (w.qrnc||0) + ' QRNC</div></div>'
+      + '<button onclick="document.getElementById(\'worker-card\').style.display=\'none\'" style="margin-left:auto;background:none;border:none;font-size:20px;cursor:pointer;">✕</button>'
+      + '</div>'
+      + '<button class="btn" onclick="openWorkerChat(\'' + (w.huid||'') + '\',\'' + w.name + '\')">💬 Написать</button>';
+  }
   panel.style.display = 'block';
 }
 
 function openWorkerChat(huid, name) {
   document.getElementById('worker-card').style.display = 'none';
-  // Открыть чат
   openJobChat('direct_' + Date.now(), huid, name);
 }
 
-// Работник отмечает свою геолокацию
 function shareMyLocation() {
   if (!navigator.geolocation) { T('Геолокация недоступна'); return; }
   T('Определяем местоположение...');
@@ -189,11 +220,27 @@ function shareMyLocation() {
   }, function() { T('Разрешите доступ к геолокации'); });
 }
 
+function showCategorySelect() {
+  var panel = document.getElementById('my-cat-panel');
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  var list = document.getElementById('my-cat-list');
+  if (!list) return;
+  list.innerHTML = mapCategories.filter(function(c){ return c.id; }).map(function(c) {
+    return '<button id="mycat-'+c.id+'" class="my-cat-btn" onclick="selectMyCategory(\''+c.id+'\')" '
+      + 'style="padding:10px 16px;border-radius:12px;border:1.5px solid var(--border);background:white;font-size:13px;font-weight:600;cursor:pointer;">'
+      + c.icon + ' ' + c.name + '</button>';
+  }).join('');
+}
+
 function selectMyCategory(catId) {
   var cat = mapCategories.find(function(c){ return c.id === catId; });
   U.jobCategory = catId;
   U.jobIcon = cat ? cat.icon : '👤';
-  document.querySelectorAll('.my-cat-btn').forEach(function(b){ b.style.borderColor='var(--border)'; b.style.background='white'; });
+  document.querySelectorAll('.my-cat-btn').forEach(function(b){
+    b.style.borderColor = 'var(--border)';
+    b.style.background = 'white';
+  });
   var btn = document.getElementById('mycat-' + catId);
   if (btn) { btn.style.borderColor='var(--green)'; btn.style.background='var(--green-light)'; }
   T(cat ? cat.icon + ' ' + cat.name + ' выбрано' : '');
