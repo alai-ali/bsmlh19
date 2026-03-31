@@ -178,11 +178,39 @@ function postJob() {
 }
 
 // ── КОШЕЛЁК ──
-function copyAddr() {
-  var a = el('wal-addr');
-  if (a && navigator.clipboard) navigator.clipboard.writeText(a.innerText).then(function(){ T('Адрес скопирован'); });
-  else T('Адрес скопирован');
-}
+function loadWalletBalance() {
+  if (!U.huid) return;
+  
+  // Показываем адрес кошелька
+  var addrEl = el('wal-addr');
+  if (addrEl) addrEl.innerText = U.huid;
 
+  // Проверяем Firebase
+  if (!window.firebase || !firebase.apps || !firebase.apps.length) {
+    setTimeout(loadWalletBalance, 1000);
+    return;
+  }
+
+  var key = U.huid.replace(/[^a-zA-Z0-9]/g, '');
+  
+  firebase.database().ref('tokens/' + key).on('value', function(snap) {
+    var data = snap.val() || {};
+    
+    var qrt  = data.qrt  || 0;
+    var qrnc = data.qrnc || 0;
+
+    // Обновляем все элементы (в HTML есть дубликаты id — исправь их!)
+    document.querySelectorAll('#wal-qrt').forEach(function(e) {
+      e.innerText = qrt.toFixed(3);
+    });
+    document.querySelectorAll('#wal-qrnc').forEach(function(e) {
+      e.innerText = qrnc.toFixed(3);
+    });
+
+    // Основной баланс BST (пока 0, токен в 2026)
+    var balEl = document.querySelector('.wallet-balance');
+    if (balEl) balEl.innerText = '0.00';
+  });
+}
 // ── НАСТРОЙКИ ──
 function toggleLang() { T('Смена языка — скоро'); }
