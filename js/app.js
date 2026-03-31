@@ -53,34 +53,34 @@ function showSMS() { showScr('s4'); }
 // ── ЗАПУСК ПРИЛОЖЕНИЯ ──
 function toApp() {
   try {
-  var saved = localStorage.getItem('bsmlh_huid');
-  if (saved) {
-    U.huid = saved;
-  } else {
+    var saved = localStorage.getItem('bsmlh_huid');
+    if (saved) {
+      U.huid = saved;
+    } else {
+      var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', uid = '';
+      for (var i = 0; i < 16; i++) uid += chars[Math.floor(Math.random() * chars.length)];
+      U.huid = 'BSMLH-2026-' + uid;
+      localStorage.setItem('bsmlh_huid', U.huid);
+      localStorage.setItem('bsmlh_name', U.name);
+
+      // Новый пользователь — начислить 1 BSMLH Soulbound
+      setTimeout(function() {
+        if (window.firebase && firebase.apps && firebase.apps.length) {
+          var key = U.huid.replace(/[^a-zA-Z0-9]/g, '');
+          var ref = firebase.database().ref('tokens/' + key + '/bsmlh');
+          ref.once('value', function(snap) {
+            if (!snap.val()) {
+              ref.set(1);
+            }
+          });
+        }
+      }, 3000);
+    }
+  } catch(e) {
     var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', uid = '';
     for (var i = 0; i < 16; i++) uid += chars[Math.floor(Math.random() * chars.length)];
     U.huid = 'BSMLH-2026-' + uid;
-    localStorage.setItem('bsmlh_huid', U.huid);
-    localStorage.setItem('bsmlh_name', U.name);
   }
-    if (!saved) {
-  setTimeout(function() {
-    if (window.firebase && firebase.apps && firebase.apps.length) {
-      var key = U.huid.replace(/[^a-zA-Z0-9]/g, '');
-      var ref = firebase.database().ref('tokens/' + key + '/bsmlh');
-      ref.once('value', function(snap) {
-        if (!snap.val()) { // Только если ещё нет — нельзя начислить дважды
-          ref.set(1);
-        }
-      });
-    }
-  }, 3000);
-}
-} catch(e) {
-  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', uid = '';
-  for (var i = 0; i < 16; i++) uid += chars[Math.floor(Math.random() * chars.length)];
-  U.huid = 'BSMLH-2026-' + uid;
-}
 
   // Имя
   ['id-name','p-name','set-name'].forEach(function(id){ var e=el(id); if(e) e.innerText=U.name.toUpperCase(); });
@@ -111,7 +111,7 @@ function toApp() {
   addMsg('bot', '👋 Привет, ' + U.name + '! Я ALAI — ваш ИИ-ассистент BSMLH. Чем могу помочь?');
 }
 
-// ── ЧИПА UI ──
+// ── ЧИП UI ──
 function refreshChipUI() {
   var s = U.hasChip ? '✅ Чип активирован' : 'Без чипа';
   var st = el('id-chip-status'); if (st) st.innerText = s;
@@ -190,9 +190,10 @@ function postJob() {
   showJobTab('vacancies');
 }
 
+// ── КОШЕЛЁК ──
 function loadWalletBalance() {
   if (!U.huid) return;
-  
+
   var addrEl = el('wal-addr');
   if (addrEl) addrEl.innerText = U.huid;
 
@@ -202,10 +203,10 @@ function loadWalletBalance() {
   }
 
   var key = U.huid.replace(/[^a-zA-Z0-9]/g, '');
-  
+
   firebase.database().ref('tokens/' + key).on('value', function(snap) {
     var data = snap.val() || {};
-    
+
     var qrt  = data.qrt  || 0;
     var qrnc = data.qrnc || 0;
 
@@ -216,10 +217,7 @@ function loadWalletBalance() {
       e.innerText = qrnc.toFixed(3);
     });
 
-    var balEl = document.querySelector('.wallet-balance');
-    if (balEl) balEl.innerText = '0.00';
-
-    // ✅ СЮДА ВСТАВИТЬ — после строки с balEl:
+    // BSMLH Soulbound
     var bsmlhEl = el('wal-bsmlh');
     if (!data.bsmlh) {
       firebase.database().ref('tokens/' + key + '/bsmlh').set(1);
@@ -227,40 +225,14 @@ function loadWalletBalance() {
     } else {
       if (bsmlhEl) bsmlhEl.innerText = data.bsmlh;
     }
-
   });
 }
-  
-  // Показываем адрес кошелька
-  var addrEl = el('wal-addr');
-  if (addrEl) addrEl.innerText = U.huid;
 
-  // Проверяем Firebase
-  if (!window.firebase || !firebase.apps || !firebase.apps.length) {
-    setTimeout(loadWalletBalance, 1000);
-    return;
-  }
-
-  var key = U.huid.replace(/[^a-zA-Z0-9]/g, '');
-  
-  firebase.database().ref('tokens/' + key).on('value', function(snap) {
-    var data = snap.val() || {};
-    
-    var qrt  = data.qrt  || 0;
-    var qrnc = data.qrnc || 0;
-
-    // Обновляем все элементы (в HTML есть дубликаты id — исправь их!)
-    document.querySelectorAll('#wal-qrt').forEach(function(e) {
-      e.innerText = qrt.toFixed(3);
-    });
-    document.querySelectorAll('#wal-qrnc').forEach(function(e) {
-      e.innerText = qrnc.toFixed(3);
-    });
-
-    // Основной баланс BST (пока 0, токен в 2026)
-    var balEl = document.querySelector('.wallet-balance');
-    if (balEl) balEl.innerText = '0.00';
-  });
+function copyAddr() {
+  var a = el('wal-addr');
+  if (a && navigator.clipboard) navigator.clipboard.writeText(a.innerText).then(function(){ T('Адрес скопирован'); });
+  else T('Адрес скопирован');
 }
+
 // ── НАСТРОЙКИ ──
 function toggleLang() { T('Смена языка — скоро'); }
