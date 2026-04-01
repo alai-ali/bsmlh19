@@ -132,33 +132,62 @@ function addToken(userHuid, type, amount) {
 
 // ЗАВЕРШЕНИЕ — работодатель подтверждает
 function completeJobEmployer(jobId, workerHuid) {
+  if (!window.firebase || !firebase.apps.length) { T('Нет соединения'); return; }
+ 
   firebase.database().ref('jobs/' + jobId + '/confirmedEmployer').set(true).then(function() {
     T('✅ Вы подтвердили завершение');
     closeJobDetail();
+ 
     firebase.database().ref('jobs/' + jobId).once('value', function(snap) {
-      var j = snap.val(); if (!j) return;
-      if (j.confirmedWorker) {
+      var j = snap.val();
+      if (!j) return;
+ 
+      function finishJob(jobData) {
         firebase.database().ref('jobs/' + jobId + '/status').set('done');
+ 
+        var workerKey = workerHuid.replace(/[^a-zA-Z0-9]/g, '');
+        var CASHBACK = 0.4;
+ 
+        // Кешбэк работнику
+        firebase.database().ref('tokens/' + workerKey + '/qrt').once('value', function(s) {
+          var bal = s.val() || 0;
+          firebase.database().ref('tokens/' + workerKey + '/qrt').set(
+            Math.round((bal + CASHBACK) * 100000) / 100000
+          );
+          firebase.database().ref('transactions/' + workerKey).push({
+            type:   'cashback',
+            amount: +CASHBACK,
+            jobId:  jobId,
+            desc:   'Кешбэк за завершение заказа',
+            time:   Date.now()
+          });
+        });
+ 
+        // Рейтинговые токены
         addToken(workerHuid, 'qrt', 1);
         addToken(U.huid, 'qrt', 0.1);
-        T('🎉 Заказ завершён! Начислены QRT');
-        setTimeout(function(){
-          openRating(jobId, workerHuid, j.selectedWorkerName || 'Работник', 'employer');
+ 
+        T('🎉 Заказ завершён!');
+ 
+        setTimeout(function() {
+          openRating(
+            jobId,
+            workerHuid,
+            jobData.selectedWorkerName || 'Работник',
+            'employer'
+          );
         }, 800);
+      }
+ 
+      if (j.confirmedWorker) {
+        finishJob(j);
       } else {
-        // Слушаем пока работник подтвердит
         firebase.database().ref('jobs/' + jobId + '/confirmedWorker').on('value', function(s) {
           if (s.val() === true) {
             firebase.database().ref('jobs/' + jobId + '/confirmedWorker').off();
             firebase.database().ref('jobs/' + jobId).once('value', function(snap2) {
-              var j2 = snap2.val(); if (!j2) return;
-              firebase.database().ref('jobs/' + jobId + '/status').set('done');
-              addToken(workerHuid, 'qrt', 1);
-              addToken(U.huid, 'qrt', 0.1);
-              T('🎉 Заказ завершён! Начислены QRT');
-              setTimeout(function(){
-                openRating(jobId, workerHuid, j2.selectedWorkerName || 'Работник', 'employer');
-              }, 800);
+              var j2 = snap2.val();
+              if (j2) finishJob(j2);
             });
           }
         });
@@ -166,22 +195,67 @@ function completeJobEmployer(jobId, workerHuid) {
     });
   });
 }
-
 // ЗАВЕРШЕНИЕ — работник подтверждает
 function completeJobWorker(jobId, employerHuid) {
+  if (!window.firebase || !firebase.apps.length) { T('Нет соединения'); return; }
+ 
+  var key = U.huid.replace(/[^a-zA-Z0-9]/g, '');
+  var CASHBACK = 0.4; // 20% от 2 QRT
+ 
   firebase.database().ref('jobs/' + jobId + '/confirmedWorker').set(true).then(function() {
     T('✅ Вы подтвердили завершение');
     closeJobDetail();
+ 
     firebase.database().ref('jobs/' + jobId).once('value', function(snap) {
-      var j = snap.val(); if (!j) return;
-      if (j.confirmedEmployer) {
+      var j = snap.val();
+      if (!j) return;
+ 
+      function finishJob(jobData) {
         firebase.database().ref('jobs/' + jobId + '/status').set('done');
+ 
+        // Кешбэк работнику +0.4 QRT
+        firebase.database().ref('tokens/' + key + '/qrt').once('value', function(s) {
+          var bal = s.val() || 0;
+          firebase.database().ref('tokens/' + key + '/qrt').set(
+            Math.round((bal + CASHBACK) * 100000) / 100000
+          );
+          firebase.database().ref('transactions/' + key).push({
+            type:   'cashback',
+            amount: +CASHBACK,
+            jobId:  jobId,
+            desc:   'Кешбэк за завершение заказа',
+            time:   Date.now()
+          });
+        });
+ 
+        // Рейтинговые токены работнику (QRT за качество)
         addToken(U.huid, 'qrt', 1);
+        // Работодателю небольшой бонус
         addToken(employerHuid, 'qrt', 0.1);
-        T('🎉 Заказ завершён! Начислены QRT');
-        setTimeout(function(){
-          openRating(jobId, employerHuid, j.employer, 'worker');
+ 
+        T('🎉 Заказ завершён! +0.4 QRT кешбэк + бонус за качество');
+ 
+        setTimeout(function() {
+          openRating(jobId, employerHuid, jobData.employer, 'worker');
         }, 800);
+      }
+ 
+      if (j.confirmedEmployer) {
+        finishJob(j);
+      } else {
+        firebase.database().ref('jobs/' + jobId + '/confirmedEmployer').on('value', function(s) {
+          if (s.val() === true) {
+            firebase.database().ref('jobs/' + jobId + '/confirmedEmployer').off();
+            firebase.database().ref('jobs/' + jobId).once('value', function(snap2) {
+              var j2 = snap2.val();
+              if (j2) finishJob(j2);
+            });
+          }
+        });
+      }
+    });
+  });
+}
       } else {
         // Слушаем пока работодатель подтвердит
         firebase.database().ref('jobs/' + jobId + '/confirmedEmployer').on('value', function(s) {
@@ -260,15 +334,54 @@ function loadJobs() {
 }
 
 function applyToJob(jobId, btn) {
+  if (!U.huid) { T('Войдите в аккаунт'); return; }
+  if (!window.firebase || !firebase.apps.length) { T('Нет соединения'); return; }
+ 
+  var key = U.huid.replace(/[^a-zA-Z0-9]/g, '');
+  var FEE = 2; // QRT за отклик
+ 
   if (btn) btn.disabled = true;
-  var key = U.huid.replace(/[^a-zA-Z0-9]/g,'');
-  firebase.database().ref('jobs/' + jobId + '/applicants/' + key).set({
-    name: U.name, huid: U.huid, appliedAt: Date.now(), status: 'pending'
-  }).then(function() {
-    T('✅ Отклик отправлен!');
-    loadJobs();
-  }).catch(function(e){ T('Ошибка: ' + e.message); });
+ 
+  firebase.database().ref('tokens/' + key + '/qrt').once('value', function(snap) {
+    var balance = snap.val() || 0;
+ 
+    if (balance < FEE) {
+      T('❌ Нужно ' + FEE + ' QRT для отклика. Баланс: ' + balance.toFixed(1) + ' QRT');
+      if (btn) btn.disabled = false;
+      return;
+    }
+ 
+    // Списываем 2 QRT
+    firebase.database().ref('tokens/' + key + '/qrt').set(
+      Math.round((balance - FEE) * 100000) / 100000
+    );
+ 
+    // Сохраняем транзакцию
+    firebase.database().ref('transactions/' + key).push({
+      type:   'fee_apply',
+      amount: -FEE,
+      jobId:  jobId,
+      desc:   'Отклик на заказ',
+      time:   Date.now()
+    });
+ 
+    // Отправляем отклик
+    firebase.database().ref('jobs/' + jobId + '/applicants/' + key).set({
+      name:      U.name,
+      huid:      U.huid,
+      appliedAt: Date.now(),
+      status:    'pending'
+    }).then(function() {
+      T('✅ Отклик отправлен! Списано ' + FEE + ' QRT');
+      loadJobs();
+    }).catch(function(e) {
+      T('Ошибка: ' + e.message);
+      if (btn) btn.disabled = false;
+    });
+  });
 }
+ 
+
 
 // ДЕТАЛИ ЗАКАЗА
 function openJobDetail(jobId) {
