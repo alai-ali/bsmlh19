@@ -50,8 +50,34 @@ function loadPhoto(inp) {
 
 function showSMS() { showScr('s4'); }
 
+function toggleAgreeBtn() {
+  var cb  = el('terms-check');
+  var btn = el('agree-btn');
+  if (!btn || !cb) return;
+  if (cb.checked) {
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+  } else {
+    btn.style.opacity = '0.4';
+    btn.style.pointerEvents = 'none';
+  }
+}
+
+function agreeAndEnter() {
+  localStorage.setItem('bsmlh_terms_agreed', 'true');
+  toApp();
+}
+
 // ── ЗАПУСК ПРИЛОЖЕНИЯ ──
 function toApp() {
+  var agreed = localStorage.getItem('bsmlh_terms_agreed');
+if (agreed) {
+  toApp();          // повторный вход — Terms не показываем
+} else {
+  showScr('s5');    // первая регистрация — показать Terms
+}
+```
+
   try {
     var saved = localStorage.getItem('bsmlh_huid');
     if (saved) {
