@@ -24,6 +24,7 @@ function openPg(id) {
   if (p) p.style.display = 'flex';
   if (id === 'pg-wal' && typeof loadWalletBalance === 'function') loadWalletBalance();
 }
+
 function closePg(id) {
   var p = el(id);
   if (p) p.style.display = 'none';
@@ -50,6 +51,7 @@ function loadPhoto(inp) {
 
 function showSMS() { showScr('s4'); }
 
+// ── TERMS ──
 function toggleAgreeBtn() {
   var cb  = el('terms-check');
   var btn = el('agree-btn');
@@ -70,18 +72,12 @@ function agreeAndEnter() {
 
 // ── ЗАПУСК ПРИЛОЖЕНИЯ ──
 function toApp() {
-  var agreed = localStorage.getItem('bsmlh_terms_agreed');
-if (agreed) {
-  toApp();          // повторный вход — Terms не показываем
-} else {
-  showScr('s5');    // первая регистрация — показать Terms
-}
-```
-
   try {
     var saved = localStorage.getItem('bsmlh_huid');
     if (saved) {
       U.huid = saved;
+      var savedName = localStorage.getItem('bsmlh_name');
+      if (savedName) U.name = savedName;
     } else {
       var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', uid = '';
       for (var i = 0; i < 16; i++) uid += chars[Math.floor(Math.random() * chars.length)];
@@ -95,9 +91,7 @@ if (agreed) {
           var key = U.huid.replace(/[^a-zA-Z0-9]/g, '');
           var ref = firebase.database().ref('tokens/' + key + '/bsmlh');
           ref.once('value', function(snap) {
-            if (!snap.val()) {
-              ref.set(1);
-            }
+            if (!snap.val()) { ref.set(1); }
           });
         }
       }, 3000);
@@ -243,7 +237,6 @@ function loadWalletBalance() {
       e.innerText = qrnc.toFixed(3);
     });
 
-    // BSMLH Soulbound
     var bsmlhEl = el('wal-bsmlh');
     if (!data.bsmlh) {
       firebase.database().ref('tokens/' + key + '/bsmlh').set(1);
