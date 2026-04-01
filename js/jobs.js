@@ -1,161 +1,226 @@
-// БИРЖА ТРУДА
-var jobsDB = null;
-var currentJobId = null;
-var currentRole = null;
-var initAttempts = 0;
+// ==========================================
+// 1. ГЛОБАЛЬНОЕ СОСТОЯНИЕ (STATE)
+// ==========================================
+var U = { 
+    name: localStorage.getItem('bsmlh_name') || '', 
+    huid: localStorage.getItem('bsmlh_huid') || '', 
+    phone: '', photo: '', hasChip: false, chipUID: '' 
+};
 
-function initJobsDB() {
-    if (!window.firebase || !firebase.apps || !firebase.apps.length) {
-        if (initAttempts < 10) {
-            initAttempts++;
-            setTimeout(initJobsDB, 800);
-        }
-        return;
-    }
-    try {
-        jobsDB = firebase.database().ref('jobs');
-        console.log('JobsDB ready');
-    } catch(e) {
-        console.error('Firebase init error:', e);
-    }
+// Категории работ
+var jobCategories = [
+    { id:'it', icon:'💻', name:'IT' },
+    { id:'build', icon:'🏗️', name:'Стройка' },
+    { id:'transport', icon:'🚗', name:'Транспорт' },
+    { id:'clean', icon:'🧹', name:'Клининг' },
+    { id:'other', icon:'🔧', name:'Другое' }
+];
+
+// ==========================================
+// 2. УТИЛИТЫ И ИНТЕРФЕЙС
+// ==========================================
+function el(id) { return document.getElementById(id); }
+
+function T(msg) {
+    var t = el('toast');
+    if (!t) { console.log("Toast:", msg); return; }
+    t.innerText = msg;
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 2800);
 }
 
-// РОЛЬ
+function showScr(id) {
+    document.querySelectorAll('.scr').forEach(function(s){ s.style.display = 'none'; });
+    var s = el(id); if (s) s.style.display = 'flex';
+}
+
+function openPg(id) {
+    var p = el(id); if (p) p.style.display = 'flex';
+    if (id === 'pg-wal') loadWalletBalance();
+    if (id === 'pg-stats') loadStats();
+}
+
+function closePg(id) {
+    var p = el(id); if (p) p.style.display = 'none';
+}
+
+// ==========================================
+// 3. ЛОГИКА БИРЖИ (РАБОТОДАТЕЛЬ / РАБОТНИК)
+// ==========================================
 function selectRole(role) {
-    currentRole = role;
-    el('jobs-role').style.display = 'none';
+    var roleScr = el('jobs-role');
+    var empScr = el('jobs-employer');
+    var wrkScr = el('jobs-worker');
+
+    if (roleScr) roleScr.style.display = 'none';
+
     if (role === 'employer') {
-        el('jobs-employer').style.display = 'block';
-        el('jobs-worker').style.display = 'none'; // Скрываем чужую роль
+        if (empScr) empScr.style.display = 'block';
+        if (wrkScr) wrkScr.style.display = 'none';
         loadMyJobs();
     } else {
-        el('jobs-worker').style.display = 'block';
-        el('jobs-employer').style.display = 'none';
+        if (wrkScr) wrkScr.style.display = 'block';
+        if (empScr) empScr.style.display = 'none';
         loadJobs();
     }
 }
 
-// РАБОТОДАТЕЛЬ: ПУБЛИКАЦИЯ
-function postNewJob() {
-    var title = el('jp-title').value.trim();
-    var desc = el('jp-desc').value.trim();
-    var price = el('jp-price').value.trim();
-    var location = el('jp-location').value.trim();
+function loadJobs() {
+    var list = el('worker-jobs-list');
+    if (!list || !window.firebase) return;
 
-    if (!title || !desc || !price) { T('Заполните обязательные поля'); return; }
-
-    var key = U.huid.replace(/[^a-zA-Z0-9]/g, '');
-    var FREE_LIMIT = 5;
-    var POST_FEE = 5;
-
-    firebase.database().ref('jobs').orderByChild('employerHuid').equalTo(U.huid).once('value', function(snap) {
-        var count = snap.numChildren();
-
-        var publishJob = function() {
-            var jobId = Date.now().toString(36).toUpperCase();
-            var job = {
-                id: jobId,
-                title: title,
-                desc: desc,
-                price: price,
-                location: location || 'Удалённо',
-                category: selectedCategory,
-                employer: U.name,
-                employerHuid: U.huid,
-                status: 'open',
-                createdAt: Date.now()
-            };
-
-            firebase.database().ref('jobs/' + jobId).set(job).then(function() {
-                T('✅ Заказ опубликован!');
-                el('jobs-post-form').style.display = 'none';
-                el('jobs-employer-home').style.display = 'block';
-                loadMyJobs();
-                clearPostForm();
-            });
-        };
-
-        if (count < FREE_LIMIT) {
-            publishJob();
-        } else {
-            firebase.database().ref('tokens/' + key + '/qrt').once('value', function(qSnap) {
-                var balance = qSnap.val() || 0;
-                if (balance < POST_FEE) {
-                    T('❌ Недостаточно QRT (нужно ' + POST_FEE + ')');
-                    return;
-                }
-                // Списание
-                firebase.database().ref('tokens/' + key + '/qrt').set(Number((balance - POST_FEE).toFixed(5)));
-                firebase.database().ref('transactions/' + key).push({
-                    type: 'fee_post',
-                    amount: -POST_FEE,
-                    desc: 'Публикация заказа',
-                    time: Date.now()
-                });
-                publishJob();
-            });
-        }
-    });
-}
-
-// ПОДТВЕРЖДЕНИЕ ЗАКАЗА (РАБОТНИК)
-function completeJobWorker(jobId, employerHuid) {
-    if (!window.firebase) return;
-    var key = U.huid.replace(/[^a-zA-Z0-9]/g, '');
-    
-    firebase.database().ref('jobs/' + jobId + '/confirmedWorker').set(true).then(function() {
-        T('✅ Вы подтвердили выполнение');
+    var ref = firebase.database().ref('jobs');
+    ref.off(); // Очистка старых слушателей чтобы не висло
+    ref.on('value', function(snap) {
+        var jobs = snap.val();
+        if (!jobs) { list.innerHTML = '<div class="empty">Заказов пока нет</div>'; return; }
         
-        // Слушаем ответ работодателя
-        var ref = firebase.database().ref('jobs/' + jobId);
-        ref.on('value', function(snap) {
-            var j = snap.val();
-            if (j && j.confirmedEmployer && j.status !== 'done') {
-                ref.off(); // Важно: отключаем слушатель
-                finalizeJob(jobId, key, employerHuid, j.employer);
+        var html = '';
+        Object.values(jobs).reverse().forEach(function(j) {
+            if (j.status === 'open') {
+                html += `
+                <div class="job-item">
+                    <div class="job-company">🏢 ${j.employer || 'Аноним'}</div>
+                    <div class="job-title" onclick="T('Детали заказа в разработке')">${j.title}</div>
+                    <div class="job-tags"><span class="job-tag">${j.price} QRT</span></div>
+                    <button class="btn-apply" onclick="applyJob(this, '${j.title}')">Откликнуться</button>
+                </div>`;
             }
         });
+        list.innerHTML = html || '<div class="empty">Нет активных заказов</div>';
     });
 }
 
-function finalizeJob(jobId, workerKey, employerHuid, employerName) {
-    var CASHBACK = 0.4;
-    firebase.database().ref('jobs/' + jobId + '/status').set('done');
-    
-    // Начисление кешбэка
-    firebase.database().ref('tokens/' + workerKey + '/qrt').once('value', function(s) {
-        var bal = s.val() || 0;
-        firebase.database().ref('tokens/' + workerKey + '/qrt').set(Number((bal + CASHBACK).toFixed(5)));
-    });
+function loadMyJobs() {
+    var list = el('my-jobs-list');
+    if (!list || !window.firebase) return;
 
-    addToken(U.huid, 'qrt', 1); // Бонус за качество
-    addToken(employerHuid, 'qrt', 0.1);
-
-    T('🎉 Заказ завершён!');
-    setTimeout(function() {
-        openRating(jobId, employerHuid, employerName, 'worker');
-    }, 800);
-}
-
-// ЧАТ (Исправление дублирования сообщений)
-function openJobChat(jobId, workerHuid, workerName) {
-    var chatKey = (jobId + '_' + workerHuid).replace(/[^a-zA-Z0-9]/g,'').substring(0,60);
-    var chatContainer = el('job-chat-msgs');
-    chatContainer.innerHTML = '';
-    
-    if (chatRef) chatRef.off(); // Снимаем старый слушатель
-    
-    el('job-chat').style.display = 'flex';
-    el('job-chat-title').innerText = workerName;
-    
-    chatRef = firebase.database().ref('job_chats/' + chatKey);
-    chatRef.on('child_added', function(snap) {
-        var msg = snap.val();
-        var isMe = msg.senderHuid === U.huid;
-        var d = document.createElement('div');
-        d.className = 'msg ' + (isMe ? 'user' : 'bot');
-        d.innerHTML = '<div style="font-size:10px;opacity:0.7;">' + (isMe ? 'Вы' : msg.senderName) + '</div>' + msg.text;
-        chatContainer.appendChild(d);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+    firebase.database().ref('jobs').orderByChild('employerHuid').equalTo(U.huid).on('value', function(snap) {
+        var jobs = snap.val();
+        if (!jobs) { list.innerHTML = '<div class="empty">Вы еще не создали ни одного заказа</div>'; return; }
+        
+        list.innerHTML = Object.values(jobs).reverse().map(function(j) {
+            return `
+            <div class="job-item">
+                <div class="job-title">${j.title}</div>
+                <div class="job-status status-${j.status}">${j.status === 'open' ? 'Поиск исполнителя' : 'В работе'}</div>
+                <div class="job-price">${j.price} QRT</div>
+            </div>`;
+        }).join('');
     });
 }
+
+function applyJob(btn, title) {
+    btn.innerText = '✅ Отправлено';
+    btn.disabled = true;
+    btn.style.background = '#6B7280';
+    T('Отклик на "' + title + '" успешно отправлен!');
+}
+
+function postJob() {
+    var title = el('job-post-title');
+    var price = el('job-post-salary');
+    if (!title || !title.value.trim()) { T('Введите название вакансии'); return; }
+
+    var newJob = {
+        id: 'JB' + Date.now(),
+        title: title.value.trim(),
+        price: price ? price.value : '0',
+        employerHuid: U.huid,
+        employer: U.name,
+        status: 'open',
+        date: Date.now()
+    };
+
+    firebase.database().ref('jobs/' + newJob.id).set(newJob).then(function() {
+        T('✅ Вакансия опубликована!');
+        title.value = '';
+        if(price) price.value = '';
+        selectRole('employer');
+    });
+}
+
+// ==========================================
+// 4. КОШЕЛЕК И ТОКЕНЫ
+// ==========================================
+function loadWalletBalance() {
+    if (!U.huid || !window.firebase) return;
+    var key = U.huid.replace(/[^a-zA-Z0-9]/g, '');
+
+    firebase.database().ref('tokens/' + key).on('value', function(snap) {
+        var data = snap.val() || { qrt: 0, qrnc: 0, bsmlh: 1 };
+        if (el('wal-qrt')) el('wal-qrt').innerText = (data.qrt || 0).toFixed(3);
+        if (el('wal-qrnc')) el('wal-qrnc').innerText = (data.qrnc || 0).toFixed(3);
+        if (el('wal-bsmlh')) el('wal-bsmlh').innerText = data.bsmlh || 1;
+    });
+}
+
+// ==========================================
+// 5. ЗАПУСК ПРИЛОЖЕНИЯ
+// ==========================================
+function toApp() {
+    try {
+        if (!U.huid) {
+            var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', uid = '';
+            for (var i = 0; i < 16; i++) uid += chars[Math.floor(Math.random() * chars.length)];
+            U.huid = 'BSMLH-2026-' + uid;
+            U.name = el('inp-name') ? el('inp-name').value.trim() : 'User';
+            localStorage.setItem('bsmlh_huid', U.huid);
+            localStorage.setItem('bsmlh_name', U.name);
+        }
+
+        var key = U.huid.replace(/[^a-zA-Z0-9]/g, '');
+
+        if (window.firebase && firebase.apps.length) {
+            // Регистрация в БД если новый
+            var userRef = firebase.database().ref('tokens/' + key);
+            userRef.once('value', function(s) {
+                if (!s.val()) {
+                    userRef.set({ qrt: 50, qrnc: 0, bsmlh: 1, regDate: Date.now() });
+                    T('🎁 Начислено 50 QRT за регистрацию!');
+                }
+            });
+        }
+
+        // Обновление UI
+        ['id-name','p-name','set-name'].forEach(function(id){ if(el(id)) el(id).innerText = U.name.toUpperCase(); });
+        ['id-huid','p-huid','set-huid'].forEach(function(id){ if(el(id)) el(id).innerText = U.huid; });
+
+        document.querySelectorAll('.scr').forEach(function(s){ s.style.display='none'; });
+        if (el('app')) el('app').style.display = 'flex';
+
+    } catch(e) {
+        console.error("Critical Start Error:", e);
+    }
+}
+
+// ==========================================
+// 6. СТАТИСТИКА И УРОВНИ
+// ==========================================
+function loadStats() {
+    if (!U.huid || !window.firebase) return;
+    var key = U.huid.replace(/[^a-zA-Z0-9]/g, '');
+
+    firebase.database().ref('jobs').once('value', function(snap) {
+        var done = 0;
+        snap.forEach(function(child) {
+            if (child.val().selectedWorker === U.huid && child.val().status === 'done') done++;
+        });
+
+        // Расчет уровня
+        var level = 'Новичок 🌱', progress = 10;
+        if (done >= 1) { level = 'Стартер ⚡'; progress = 30; }
+        if (done >= 5) { level = 'Активный 🔥'; progress = 60; }
+        
+        if (el('stat-level-badge')) el('stat-level-badge').innerText = level;
+        if (el('stat-progress')) el('stat-progress').style.width = progress + '%';
+        if (el('stat-done')) el('stat-done').innerText = done;
+    });
+}
+
+// Принудительная инициализация после загрузки страницы
+window.onload = function() {
+    if (localStorage.getItem('bsmlh_huid')) {
+        toApp();
+    }
+};
