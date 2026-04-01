@@ -49,7 +49,8 @@ function verifySMS() {
         localStorage.setItem('bsmlh_uid', U.uid);
       } catch(e) {}
       T('Номер подтверждён');
-      toApp();
+     var agreed = localStorage.getItem('bsmlh_terms_agreed');
+if (agreed) { toApp(); } else { showScr('s5');
     })
     .catch(function() { T('Неверный код'); });
 }
