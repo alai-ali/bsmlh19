@@ -71,30 +71,90 @@ function selectJobCategory(catId) {
 }
 
 function postNewJob() {
-  var title = el('jp-title').value.trim();
-  var desc = el('jp-desc').value.trim();
-  var price = el('jp-price').value.trim();
+  var title    = el('jp-title').value.trim();
+  var desc     = el('jp-desc').value.trim();
+  var price    = el('jp-price').value.trim();
   var location = el('jp-location').value.trim();
-  if (!title) { T('Введите название заказа'); return; }
-  if (!desc) { T('Опишите задание'); return; }
-  if (!price) { T('Укажите оплату'); return; }
-  var job = {
-    id: Date.now().toString(36).toUpperCase(),
-    title: title, desc: desc, price: price,
-    location: location || 'Удалённо',
-    category: selectedCategory,
-    employer: U.name, employerHuid: U.huid,
-    status: 'open', createdAt: Date.now(), applicants: {}
-  };
-  firebase.database().ref('jobs/' + job.id).set(job).then(function() {
-    T('✅ Заказ опубликован!');
-    el('jobs-post-form').style.display = 'none';
-    el('jobs-employer-home').style.display = 'block';
-    loadMyJobs();
-    clearPostForm();
-  }).catch(function(e){ T('Ошибка: ' + e.message); });
+ 
+  if (!title)    { T('Введите название заказа'); return; }
+  if (!desc)     { T('Опишите задание'); return; }
+  if (!price)    { T('Укажите оплату'); return; }
+ 
+  var key = U.huid.replace(/[^a-zA-Z0-9]/g, '');
+  var FREE_LIMIT = 5;
+  var POST_FEE   = 5; // QRT за публикацию после лимита
+ 
+  // Считаем сколько заказов уже разместил
+  firebase.database().ref('jobs')
+    .orderByChild('employerHuid')
+    .equalTo(U.huid)
+    .once('value', function(snap) {
+ 
+      var count = snap.numChildren();
+ 
+      function publishJob() {
+        var job = {
+          id:           Date.now().toString(36).toUpperCase(),
+          title:        title,
+          desc:         desc,
+          price:        price,
+          location:     location || 'Удалённо',
+          category:     selectedCategory,
+          employer:     U.name,
+          employerHuid: U.huid,
+          status:       'open',
+          createdAt:    Date.now(),
+          applicants:   {}
+        };
+ 
+        firebase.database().ref('jobs/' + job.id).set(job).then(function() {
+          T('✅ Заказ опубликован!');
+          el('jobs-post-form').style.display  = 'none';
+          el('jobs-employer-home').style.display = 'block';
+          loadMyJobs();
+          clearPostForm();
+        }).catch(function(e) {
+          T('Ошибка: ' + e.message);
+        });
+      }
+ 
+      if (count < FREE_LIMIT) {
+        // Бесплатно
+        var left = FREE_LIMIT - count - 1;
+        if (left > 0) T('📢 Публикация бесплатна! Осталось бесплатных: ' + left);
+        else T('📢 Последний бесплатный заказ!');
+        publishJob();
+ 
+      } else {
+        // Платно — проверяем баланс QRT
+        firebase.database().ref('tokens/' + key + '/qrt').once('value', function(qSnap) {
+          var balance = qSnap.val() || 0;
+ 
+          if (balance < POST_FEE) {
+            T('❌ Нужно ' + POST_FEE + ' QRT для публикации. Баланс: ' + balance.toFixed(1) + ' QRT');
+            return;
+          }
+ 
+          // Списываем 5 QRT
+          firebase.database().ref('tokens/' + key + '/qrt').set(
+            Math.round((balance - POST_FEE) * 100000) / 100000
+          );
+ 
+          firebase.database().ref('transactions/' + key).push({
+            type:   'fee_post',
+            amount: -POST_FEE,
+            desc:   'Публикация заказа',
+            time:   Date.now()
+          });
+ 
+          T('✅ Заказ опубликован! Списано ' + POST_FEE + ' QRT');
+          publishJob();
+        });
+      }
+    });
 }
-
+ 
+ 
 function clearPostForm() {
   ['jp-title','jp-desc','jp-price','jp-location'].forEach(function(id){ var e=el(id); if(e) e.value=''; });
 }
