@@ -125,7 +125,33 @@
     <button class="btn-ghost" onclick="el('ss1').style.display='block';el('ss2').style.display='none';">← Изменить номер</button>
   </div>
 </div>
-
+<!-- Шаг 5: Согласие с условиями -->
+<div id="s5" class="scr">
+  <div class="scr-logo">
+    <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+  </div>
+  <div class="scr-h" style="margin-bottom:8px;">Почти готово 🎉</div>
+  <div class="scr-p" style="margin-bottom:20px;">Ознакомьтесь с документами BSMLH</div>
+  <div style="background:white;border-radius:16px;border:1px solid #e5e7eb;overflow:hidden;margin-bottom:24px;width:100%;">
+    <a href="terms.html" target="_blank" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #e5e7eb;text-decoration:none;color:#1a1a1a;">
+      <span style="font-size:14px;">📄 Пользовательское соглашение</span><span style="color:#6b7280;">→</span>
+    </a>
+    <a href="privacy.html" target="_blank" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #e5e7eb;text-decoration:none;color:#1a1a1a;">
+      <span style="font-size:14px;">🛡️ Политика конфиденциальности</span><span style="color:#6b7280;">→</span>
+    </a>
+    <a href="token-terms.html" target="_blank" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;text-decoration:none;color:#1a1a1a;">
+      <span style="font-size:14px;">🪙 Условия токенов</span><span style="color:#6b7280;">→</span>
+    </a>
+  </div>
+  <label style="display:flex;align-items:flex-start;gap:12px;margin-bottom:24px;cursor:pointer;width:100%;">
+    <input type="checkbox" id="terms-check" style="width:20px;height:20px;margin-top:2px;accent-color:#21A038;flex-shrink:0;" onchange="toggleAgreeBtn()">
+    <span style="font-size:13px;color:#374151;line-height:1.6;">Я принимаю Пользовательское соглашение, Политику конфиденциальности и Условия токенов</span>
+  </label>
+  <button class="btn" id="agree-btn" style="opacity:0.4;pointer-events:none;" onclick="agreeAndEnter()">
+    Войти в BSMLH →
+  </button>
+</div>
+  
 <!-- ── APP ── -->
 <div id="app">
 
