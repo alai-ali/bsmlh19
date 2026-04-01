@@ -96,6 +96,24 @@ function toApp() {
         }
       }, 3000);
     }
+    // Стартовый бонус 50 QRT новому пользователю
+  var qrtRef = firebase.database().ref('tokens/' + key + '/qrt');
+  qrtRef.once('value', function(qSnap) {
+    if (!qSnap.val()) {
+      qrtRef.set(50);
+      T('🎁 Добро пожаловать! Начислено 50 QRT');
+    }
+  });
+    
+ // Дата регистрации для статистики
+  var regRef = firebase.database().ref('tokens/' + key + '/regDate');
+  regRef.once('value', function(rSnap) {
+    if (!rSnap.val()) {
+      regRef.set(Date.now());
+      localStorage.setItem('bsmlh_reg_date', Date.now());
+    }
+  });
+    
   } catch(e) {
     var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', uid = '';
     for (var i = 0; i < 16; i++) uid += chars[Math.floor(Math.random() * chars.length)];
