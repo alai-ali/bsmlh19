@@ -624,27 +624,18 @@
   </div>
 </div>
 
-<!-- Инвестиции -->
-<div id="pg-fund" class="pg">
-  <div class="pg-head">
-    <button class="pg-back" onclick="closePg('pg-fund')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-    <span class="pg-head-title">Инвестиции</span>
-  </div>
+<!-- Статистика -->
+<div class="svc-item" onclick="openPg('pg-stats');loadStats()">
+  <div class="svc-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg></div>
+  <span class="svc-name">Статистика</span>
+</div>
   <div class="pg-body">
     <div class="card" style="background:linear-gradient(135deg,var(--green),var(--green-dark));color:white;margin-bottom:16px;">
       <div style="font-size:12px;opacity:0.8;margin-bottom:4px;">Портфель</div>
       <div style="font-size:28px;font-weight:900;">$0.00</div>
       <div style="font-size:12px;opacity:0.7;margin-top:4px;">BSMLH Token — в разработке</div>
     </div>
-    <div class="section-title">Активы</div>
-    <div class="card">
-      <div class="invest-row"><div class="invest-left"><div class="invest-icon">₿</div><div><div class="invest-name">Bitcoin</div><div class="invest-sub">BTC</div></div></div><div class="invest-val"><div class="invest-price">$67,420</div><div class="invest-change">+2.4%</div></div></div>
-      <div class="invest-row"><div class="invest-left"><div class="invest-icon">Ξ</div><div><div class="invest-name">Ethereum</div><div class="invest-sub">ETH</div></div></div><div class="invest-val"><div class="invest-price">$3,240</div><div class="invest-change">+1.8%</div></div></div>
-      <div class="invest-row"><div class="invest-left"><div class="invest-icon">🟢</div><div><div class="invest-name">BSMLH Token</div><div class="invest-sub">BST</div></div></div><div class="invest-val"><div class="invest-price">—</div><div class="invest-change" style="color:var(--text2);">Скоро</div></div></div>
-    </div>
-  </div>
-</div>
-
+   
 <!-- NFC Чип -->
 <div id="pg-chip" class="pg">
   <div class="pg-head">
